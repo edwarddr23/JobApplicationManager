@@ -1,0 +1,5 @@
+server/.env
+db/.env
+node_modules
+dist
+pgdata

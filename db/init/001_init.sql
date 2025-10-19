@@ -1,0 +1,9 @@
+CREATE SCHEMA IF NOT EXISTS app AUTHORIZATION CURRENT_USER;
+
+CREATE TABLE IF NOT EXISTS app.names (
+  id          BIGSERIAL PRIMARY KEY,
+  full_name   TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO app.names (full_name) VALUES ('Example Seed');
