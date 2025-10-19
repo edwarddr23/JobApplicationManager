@@ -1,5 +1,11 @@
+.DS_Store
+.idea/
+.vscode/
+node_modules/
+dist/
+coverage/
+.env
 server/.env
 db/.env
-node_modules
-dist
-pgdata
+pgdata/
+*.log

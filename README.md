@@ -1,24 +1,24 @@
-# Job Application Tracker — PoC
+# Job Application Manager
 
-Dockerized stack:
-- **db**: PostgreSQL 16
-- **server**: Node/Express API
-- **client**: React (Vite) served by Nginx
+This branch adds Dockerized PostgreSQL + server + client setup and a core ERD + API outline.
 
-## Run
-    docker compose up -d
+## Run locally
+docker compose up -d
+docker exec -i jobtracker_db psql -U postgres -d appdb < db/init/002_schema.sql
 
-Open:
-- Client: http://localhost:5173
-- API:    http://localhost:3000
+Client: http://localhost:5173  
+API: http://localhost:3000  
 
-## API
-- GET /healthz
-- GET /names
-- POST /names   body: {"full_name":"Sathwik"}
+## Docs
+ERD (Mermaid): docs/erd.md  
+API outline: docs/api-outline.md  
 
-## DB
-Connect inside container:
-    docker exec -it jobtracker_db psql -U postgres -d appdb
-Then:
-    SELECT * FROM app.names;
+## Schema Overview
+users  
+companies  
+job_boards  
+applications (composite PK: user_id, company_id, job_board_id)
+
+## Notes
+applications.status stores current state; updated_at updates on change.  
+Add status_history table later for per-status timestamps.
