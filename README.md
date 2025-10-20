@@ -22,3 +22,6 @@ applications (composite PK: user_id, company_id, job_board_id)
 ## Notes
 applications.status stores current state; updated_at updates on change.  
 Add status_history table later for per-status timestamps.
+
+- Soft delete enabled: DELETE marks applications with deleted_at
+- New endpoints: GET /companies, GET /job-boards
