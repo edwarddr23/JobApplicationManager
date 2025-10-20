@@ -9,3 +9,4 @@ server/.env
 db/.env
 pgdata/
 *.log
+postgres_docker
