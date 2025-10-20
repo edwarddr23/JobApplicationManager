@@ -186,7 +186,7 @@ export default function App() {
   async function fetchNames() {
     setErr(""); setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/names`);
+      const res = await fetch(`/names`, { headers: authHeaders() });
       if (!res.ok) throw new Error(`GET /names failed: ${res.status}`);
       setNames(await res.json());
     } catch (e) { setErr(e.message); }
