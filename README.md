@@ -18,3 +18,45 @@ Building and running the client docker image is a little slow on windows, so if 
 ### `npm run start`
 
 However, you must test changes in docker to make sure it works between platforms. Docker compatibility must be tested as our development platforms are likely not the same (I develop on Linux). Also, this is best practice in case we need to present on a different system for presentations.
+
+
+---
+
+## Quick Start for Local Verification
+
+Run all containers:
+
+docker compose up -d
+docker compose ps
+
+Server: http://localhost:3002
+Client: http://localhost:5175
+
+## Temporary Auth Setup (no login route yet)
+
+Generate a 2-hour JWT for user bob:
+
+docker exec -it job-tracker-server-1 node -e "
+  const jwt=require('jsonwebtoken');
+  const s=process.env.JWT_SECRET || 'dev-local-jwt';
+  const uid='4f75dd24-57cf-4aaa-9349-fb2a656153f0';
+  console.log(jwt.sign({ userId: uid, username:'bob' }, s, { expiresIn:'2h' }));
+"
+
+In the browser DevTools console at http://localhost:5175:
+
+localStorage.setItem('username', 'bob');
+localStorage.setItem('token', 'PASTE_TOKEN_HERE');
+location.reload();
+
+## API Verification
+
+curl -s http://localhost:3002/companies | jq .
+curl -s http://localhost:3002/job-boards | jq .
+curl -s -H "Authorization: Bearer PASTE_TOKEN_HERE" \
+  "http://localhost:3002/applications?username=bob" | jq .
+
+Notes:
+- Token expires in 2 hours. Mint a new one as needed.
+- /companies and /job-boards are public routes.
+- /applications needs Authorization: Bearer <token>.
