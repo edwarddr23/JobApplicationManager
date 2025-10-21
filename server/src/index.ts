@@ -67,8 +67,7 @@ async function createTablesIfNotExist() {
       username VARCHAR(50) UNIQUE NOT NULL,
       firstname VARCHAR(50) NOT NULL,
       lastname VARCHAR(50) NOT NULL,
-      password VARCHAR(255) NOT NULL,
-      type VARCHAR(20) DEFAULT 'viewer'
+      password VARCHAR(255) NOT NULL
     );
   `;
   try {
@@ -137,7 +136,6 @@ app.post('/login', async (req: Request, res: Response) => {
         username: user.username,
         firstname: user.firstname,
         lastname: user.lastname,
-        type: user.type,
         token
       }
     });
@@ -162,12 +160,12 @@ app.post('/logout', (req: Request, res: Response) => {
   });
 });
 
-async function insertUser(user: { username: string, firstname: string, lastname: string, password: string, type?: string }) {
+async function insertUser(user: { username: string, firstname: string, lastname: string, password: string}) {
   const result = await pool.query(
-    `INSERT INTO users (username, firstname, lastname, password, type)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO users (username, firstname, lastname, password)
+     VALUES ($1, $2, $3, $4)
      RETURNING id`,
-    [user.username, user.firstname, user.lastname, user.password, user.type || 'viewer']
+    [user.username, user.firstname, user.lastname, user.password || 'viewer']
   );
   return result.rows[0];
 }
@@ -213,7 +211,6 @@ app.post('/createuser', async (req: Request, res: Response) => {
         username,
         firstname,
         lastname,
-        type: 'viewer',
         token
       }
     });

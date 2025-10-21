@@ -16,7 +16,6 @@ function MyProfile() {
       <p>Username: {user.username}</p>
       <p>First Name: {user.firstname}</p>
       <p>Last Name: {user.lastname}</p>
-      <p>Type: {user.type}</p>
       <Link to="/changepassword">Change Password</Link>
     </div>
   );
