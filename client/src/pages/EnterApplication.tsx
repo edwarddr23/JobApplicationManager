@@ -10,6 +10,7 @@ interface JobBoard {
 
 const EnterApplication: React.FC = () => {
   const [companyName, setCompanyName] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
   const [status, setStatus] = useState('applied');
   const [jobBoardId, setJobBoardId] = useState('');
   const [jobBoards, setJobBoards] = useState<JobBoard[]>([]);
@@ -33,7 +34,7 @@ const EnterApplication: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    if (!companyName || !status || !jobBoardId) {
+    if (!companyName || !jobTitle || !status || !jobBoardId) {
       setError('All fields are required.');
       return;
     }
@@ -47,6 +48,7 @@ const EnterApplication: React.FC = () => {
         },
         body: JSON.stringify({
           companyName,
+          jobTitle, // include job title in request
           jobBoardId,
           status,
         }),
@@ -75,6 +77,14 @@ const EnterApplication: React.FC = () => {
           type="text"
           value={companyName}
           onChange={setCompanyName}
+          required
+        />
+
+        <TextInputBox
+          label="Job Title"
+          type="text"
+          value={jobTitle}
+          onChange={setJobTitle}
           required
         />
 

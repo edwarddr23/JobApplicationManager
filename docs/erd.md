@@ -33,6 +33,7 @@ erDiagram
     uuid user_id FK
     uuid company_id FK
     uuid job_board_id FK
+    text job_title
     text status        "applied,offer,rejected,withdrawn"
     timestamptz applied_at
     PK "user_id, company_id, job_board_id"
