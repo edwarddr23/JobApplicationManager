@@ -60,3 +60,4 @@ Notes:
 - Token expires in 2 hours. Mint a new one as needed.
 - /companies and /job-boards are public routes.
 - /applications needs Authorization: Bearer <token>.
+Quick sanity check Tue Oct 21 14:01:35 EDT 2025
