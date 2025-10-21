@@ -3,8 +3,12 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface Application {
   user_id: string;
+  username: string;
   company_id: string;
+  company_name: string;
   job_board_id: string;
+  job_board_name: string;
+  job_title: string;
   status: 'applied' | 'offer' | 'rejected' | 'withdrawn';
   applied_at: string;
 }
@@ -53,7 +57,6 @@ const Home: React.FC = () => {
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
-
   if (applications.length === 0) return <p>No applications yet!</p>;
 
   return (
@@ -62,9 +65,10 @@ const Home: React.FC = () => {
       <table>
         <thead>
           <tr>
-            <th>User ID</th>
-            <th>Company ID</th>
-            <th>Job Board ID</th>
+            <th>Username</th>
+            <th>Company</th>
+            <th>Job Board</th>
+            <th>Job Title</th>
             <th>Status</th>
             <th>Applied At</th>
           </tr>
@@ -72,9 +76,10 @@ const Home: React.FC = () => {
         <tbody>
           {applications.map((app, index) => (
             <tr key={index}>
-              <td>{app.user_id}</td>
-              <td>{app.company_id}</td>
-              <td>{app.job_board_id}</td>
+              <td>{app.username}</td>
+              <td>{app.company_name}</td>
+              <td>{app.job_board_name}</td>
+              <td>{app.job_title}</td>
               <td>{app.status}</td>
               <td>{new Date(app.applied_at).toLocaleString()}</td>
             </tr>

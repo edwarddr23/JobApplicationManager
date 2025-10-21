@@ -238,9 +238,25 @@ app.get('/applications', authenticateToken, async (req: AuthenticatedRequest, re
   }
 
   try {
-    // Fetch applications for the logged-in user, ordered by applied_at
     const result = await pool.query(
-      'SELECT * FROM applications WHERE user_id = $1 ORDER BY applied_at DESC',
+      `
+      SELECT 
+        a.user_id,
+        u.username,
+        a.company_id,
+        c.name AS company_name,
+        a.job_board_id,
+        jb.name AS job_board_name,
+        a.job_title,
+        a.status,
+        a.applied_at
+      FROM applications a
+      JOIN users u ON a.user_id = u.id
+      JOIN companies c ON a.company_id = c.id
+      JOIN job_boards jb ON a.job_board_id = jb.id
+      WHERE a.user_id = $1
+      ORDER BY a.applied_at DESC
+      `,
       [req.userId]
     );
 
@@ -259,6 +275,52 @@ app.get('/jobboards', authenticateToken, async (req: AuthenticatedRequest, res: 
   } catch (err) {
     console.error('Error fetching job boards:', err);
     res.status(500).json({ error: 'Database query failed' });
+  }
+});
+
+// Submit (post) application endpoint.
+app.post('/application', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.userId) {
+    return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+  }
+
+  const { companyName, jobTitle, jobBoardId, status } = req.body;
+
+  if (!companyName || !jobTitle || !jobBoardId || !status) {
+    return res.status(400).json({ error: 'All fields are required.' });
+  }
+
+  try {
+    // Ensure the company exists
+    let companyResult = await pool.query(
+      'SELECT id FROM companies WHERE name = $1',
+      [companyName]
+    );
+
+    let companyId: string;
+
+    if (companyResult.rows.length === 0) {
+      // Insert new company
+      const insertCompany = await pool.query(
+        'INSERT INTO companies (name) VALUES ($1) RETURNING id',
+        [companyName]
+      );
+      companyId = insertCompany.rows[0].id;
+    } else {
+      companyId = companyResult.rows[0].id;
+    }
+
+    // Insert the application
+    await pool.query(
+      `INSERT INTO applications (user_id, company_id, job_board_id, job_title, status)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [req.userId, companyId, jobBoardId, jobTitle, status]
+    );
+
+    res.json({ message: 'Application submitted successfully' });
+  } catch (err) {
+    console.error('Error inserting application:', err);
+    res.status(500).json({ error: 'Server error while submitting application' });
   }
 });
 

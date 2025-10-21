@@ -40,7 +40,7 @@ const EnterApplication: React.FC = () => {
     }
 
     try {
-      const res = await fetch('/api/applications', {
+      const res = await fetch('/application', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,14 +48,14 @@ const EnterApplication: React.FC = () => {
         },
         body: JSON.stringify({
           companyName,
-          jobTitle, // include job title in request
+          jobTitle,
           jobBoardId,
           status,
         }),
       });
 
       if (res.ok) {
-        navigate('/'); // redirect after success
+        navigate('/');
       } else {
         const data = await res.json();
         setError(data.error || 'Failed to submit application.');
