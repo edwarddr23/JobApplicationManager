@@ -9,9 +9,10 @@ erDiagram
   users {
     uuid id PK
     text username UK
-    text password_hash
+    text firstname
+    text lastname
+    text password
     text email
-    timestamptz created_at
   }
 
   companies {
@@ -32,8 +33,8 @@ erDiagram
     uuid user_id FK
     uuid company_id FK
     uuid job_board_id FK
-    text status        "applied,in_review,oa,phone,onsite,offer,rejected,withdrawn"
+    text status        "applied,offer,rejected,withdrawn"
     timestamptz applied_at
-    timestamptz updated_at
     PK "user_id, company_id, job_board_id"
   }
+

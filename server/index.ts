@@ -4,8 +4,9 @@ import dotenv from 'dotenv';
 import session from 'express-session';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { Pool } from 'pg';
-import { authenticateToken } from '../middleware/auth';
+import { pool, testConnection } from './db'
+import { authenticateToken } from './middleware/auth';
+import { initializeTables } from './db/init';
 
 declare module 'express-session' {
   interface SessionData {
@@ -21,75 +22,12 @@ const SERVER_PORT = process.env.SERVER_PORT ? parseInt(process.env.SERVER_PORT, 
 
 const JWT_SECRET = process.env.JWT_SECRET || 'defaultsecret';
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'postgres',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  database: process.env.POSTGRES_DB,
-});
-
 interface AuthenticatedRequest extends Request {
   userId?: number;
 }
 
-// Test connection.
-async function testConnection() {
-  let connected = false;
-  let attempts = 0;
-
-  while (!connected && attempts < 10) {
-    try {
-      await pool.query('SELECT 1');
-      console.log('Postgres connected');
-      connected = true;
-    } catch (err) {
-      attempts++;
-      if (err instanceof Error) {
-        console.error("Postgres connection error", err.message);
-      } else {
-        console.error("Postgres connection error", err);
-      }
-      await new Promise(r => setTimeout(r, 2000)); // 2 sec delay
-    }
-  }
-
-  if (!connected) {
-    throw new Error('Could not connect to Postgres after multiple attempts');
-  }
-}
-
-// DB Initialization.
-async function createTablesIfNotExist() {
-  const query = `
-    CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
-      username VARCHAR(50) UNIQUE NOT NULL,
-      firstname VARCHAR(50) NOT NULL,
-      lastname VARCHAR(50) NOT NULL,
-      password VARCHAR(255) NOT NULL
-    );
-  `;
-  try {
-    await pool.query(query);
-    console.log("Users table ensured.");
-  } catch (err) {
-    console.error("Error creating tables:", err);
-  }
-}
-
-// Test the connection and then initialize DB if not initialized.
-testConnection()
-  .then(() => createTablesIfNotExist());
-
-
 app.use(cors());
 app.use(express.json());
-
-// Root endpoint.
-app.get('/', (req, res) => {
-    res.send("Welcome to the API!");
-})
 
 // Session configuration.
 app.use(express.json());
@@ -99,7 +37,18 @@ app.use(session({
     saveUninitialized: false,
     // 1 hour max age.
     cookie: { maxAge: 3600000 }
-}))
+}));
+
+// DB Initialization.
+(async () => {
+  await testConnection();
+  await initializeTables();
+})();
+
+// Root endpoint.
+app.get('/', (req, res) => {
+    res.send("Welcome to the API!");
+});
 
 // Login endpoint.
 app.post('/login', async (req: Request, res: Response) => {
@@ -136,6 +85,7 @@ app.post('/login', async (req: Request, res: Response) => {
         username: user.username,
         firstname: user.firstname,
         lastname: user.lastname,
+        email: user.email,
         token
       }
     });
@@ -160,12 +110,12 @@ app.post('/logout', (req: Request, res: Response) => {
   });
 });
 
-async function insertUser(user: { username: string, firstname: string, lastname: string, password: string}) {
+async function insertUser(user: { username: string, firstname: string, lastname: string, email: string, password: string}) {
   const result = await pool.query(
-    `INSERT INTO users (username, firstname, lastname, password)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO users (username, firstname, lastname, email, password)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING id`,
-    [user.username, user.firstname, user.lastname, user.password || 'viewer']
+    [user.username, user.firstname, user.lastname, user.email, user.password || 'viewer']
   );
   return result.rows[0];
 }
@@ -180,7 +130,7 @@ async function getUserByUsername(username: string) {
 
 // Create user endpoint.
 app.post('/createuser', async (req: Request, res: Response) => {
-  const { username, firstname, lastname, password } = req.body;
+  const { username, firstname, lastname, email, password } = req.body;
 
   // Basic validation
   if (!username || !firstname || !lastname || !password) {
@@ -196,6 +146,7 @@ app.post('/createuser', async (req: Request, res: Response) => {
       username,
       firstname,
       lastname,
+      email,
       password: hashedPassword
     });
 
@@ -211,6 +162,7 @@ app.post('/createuser', async (req: Request, res: Response) => {
         username,
         firstname,
         lastname,
+        email,
         token
       }
     });

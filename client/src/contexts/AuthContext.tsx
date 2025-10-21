@@ -6,7 +6,7 @@ export interface User {
   firstname: string;
   lastname: string;
   token: string;
-  email?: string;
+  email: string;
 }
 
 interface AuthContextType {

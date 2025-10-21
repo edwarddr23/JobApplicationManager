@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth, User } from "../contexts/AuthContext";
 
 const CreateUser: React.FC = () => {
+  const [email, setEmail] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [firstname, setFirstname] = useState<string>("");
   const [lastname, setLastname] = useState<string>("");
@@ -54,6 +55,13 @@ const CreateUser: React.FC = () => {
       <form onSubmit={handleSubmit}>
         {error && <p>{error}</p>}
 
+        <TextInputBox
+          label="Email"
+          type="text"
+          value={email}
+          onChange={setEmail}
+          required
+        />
         <TextInputBox
           label="Username"
           type="text"
