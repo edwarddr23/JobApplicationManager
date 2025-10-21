@@ -36,6 +36,7 @@ erDiagram
     text job_title
     text status        "applied,offer,rejected,withdrawn"
     timestamptz applied_at
+    timestamptz last_updated
     PK "user_id, company_id, job_board_id"
   }
 

@@ -241,6 +241,7 @@ app.get('/applications', authenticateToken, async (req: AuthenticatedRequest, re
     const result = await pool.query(
       `
       SELECT 
+        a.id,
         a.user_id,
         u.username,
         a.company_id,
@@ -249,7 +250,8 @@ app.get('/applications', authenticateToken, async (req: AuthenticatedRequest, re
         jb.name AS job_board_name,
         a.job_title,
         a.status,
-        a.applied_at
+        a.applied_at,
+        a.last_updated
       FROM applications a
       JOIN users u ON a.user_id = u.id
       JOIN companies c ON a.company_id = c.id
@@ -321,6 +323,55 @@ app.post('/application', authenticateToken, async (req: AuthenticatedRequest, re
   } catch (err) {
     console.error('Error inserting application:', err);
     res.status(500).json({ error: 'Server error while submitting application' });
+  }
+});
+
+// Application status update endpoint.
+app.patch('/applications/:userId/:companyId/:jobBoardId', async (req, res) => {
+  const { userId, companyId, jobBoardId } = req.params;
+  const { status } = req.body;
+
+  if (!['applied','offer','rejected','withdrawn'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+
+  try {
+    await pool.query(
+      `UPDATE applications
+       SET status = $1,
+           last_updated = now()
+       WHERE user_id = $2 AND company_id = $3 AND job_board_id = $4`,
+      [status, userId, companyId, jobBoardId]
+    );
+    res.json({ message: 'Status updated' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Delete application endpoint.
+app.delete('/applications/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+
+  if (!req.userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const result = await pool.query(
+      `DELETE FROM applications WHERE id = $1 AND user_id = $2 RETURNING *`,
+      [id, req.userId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    res.json({ message: 'Application deleted', deleted: result.rows[0] });
+  } catch (err) {
+    console.error('Error deleting application:', err);
+    res.status(500).json({ error: 'Database error' });
   }
 });
 

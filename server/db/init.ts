@@ -4,12 +4,12 @@ import { pool } from './index';
 export async function createUsersTable() {
   const query = `
     CREATE TABLE IF NOT EXISTS users (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      username TEXT UNIQUE NOT NULL,
-      firstname TEXT NOT NULL,
-      lastname TEXT NOT NULL,
-      email TEXT,
-      password TEXT NOT NULL
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        username TEXT UNIQUE NOT NULL,
+        firstname TEXT NOT NULL,
+        lastname TEXT NOT NULL,
+        email TEXT,
+        password TEXT NOT NULL
     );
   `;
   await pool.query(query);
@@ -19,11 +19,11 @@ export async function createUsersTable() {
 export async function createCompaniesTable() {
   const query = `
     CREATE TABLE IF NOT EXISTS companies (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      name TEXT UNIQUE NOT NULL,
-      website TEXT,
-      location TEXT,
-      created_at TIMESTAMPTZ DEFAULT now()
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT UNIQUE NOT NULL,
+        website TEXT,
+        location TEXT,
+        created_at TIMESTAMPTZ DEFAULT now()
     );
   `;
   await pool.query(query);
@@ -33,9 +33,9 @@ export async function createCompaniesTable() {
 export async function createJobBoardsTable() {
   const query = `
     CREATE TABLE IF NOT EXISTS job_boards (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      name TEXT UNIQUE NOT NULL,
-      url TEXT
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT UNIQUE NOT NULL,
+        url TEXT
     );
   `;
   await pool.query(query);
@@ -45,13 +45,14 @@ export async function createJobBoardsTable() {
 export async function createApplicationsTable() {
   const query = `
     CREATE TABLE IF NOT EXISTS applications (
-      user_id UUID REFERENCES users(id),
-      company_id UUID REFERENCES companies(id),
-      job_board_id UUID REFERENCES job_boards(id),
-      job_title TEXT NOT NULL,
-      status TEXT CHECK (status IN ('applied','offer','rejected','withdrawn')),
-      applied_at TIMESTAMPTZ DEFAULT now(),
-      PRIMARY KEY (user_id, company_id, job_board_id)
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id),
+        company_id UUID REFERENCES companies(id),
+        job_board_id UUID REFERENCES job_boards(id),
+        job_title TEXT NOT NULL,
+        status TEXT CHECK (status IN ('applied','offer','rejected','withdrawn')),
+        applied_at TIMESTAMPTZ DEFAULT now(),
+        last_updated TIMESTAMPTZ DEFAULT now()
     );
   `;
   await pool.query(query);
@@ -70,21 +71,21 @@ export async function seedJobBoards() {
 
   const query = `
     INSERT INTO job_boards (id, name, url) VALUES
-      (gen_random_uuid(), 'Indeed', 'https://www.indeed.com'),
-      (gen_random_uuid(), 'LinkedIn', 'https://www.linkedin.com/jobs'),
-      (gen_random_uuid(), 'Glassdoor', 'https://www.glassdoor.com'),
-      (gen_random_uuid(), 'ZipRecruiter', 'https://www.ziprecruiter.com'),
-      (gen_random_uuid(), 'Monster', 'https://www.monster.com'),
-      (gen_random_uuid(), 'SimplyHired', 'https://www.simplyhired.com'),
-      (gen_random_uuid(), 'CareerBuilder', 'https://www.careerbuilder.com'),
-      (gen_random_uuid(), 'Dice', 'https://www.dice.com'),
-      (gen_random_uuid(), 'AngelList', 'https://angel.co/jobs'),
-      (gen_random_uuid(), 'Stack Overflow Jobs', 'https://stackoverflow.com/jobs'),
-      (gen_random_uuid(), 'Hired', 'https://hired.com'),
-      (gen_random_uuid(), 'FlexJobs', 'https://www.flexjobs.com'),
-      (gen_random_uuid(), 'Remote.co', 'https://remote.co/remote-jobs'),
-      (gen_random_uuid(), 'Job.com', 'https://www.job.com'),
-      (gen_random_uuid(), 'Snagajob', 'https://www.snagajob.com');
+        (gen_random_uuid(), 'Indeed', 'https://www.indeed.com'),
+        (gen_random_uuid(), 'LinkedIn', 'https://www.linkedin.com/jobs'),
+        (gen_random_uuid(), 'Glassdoor', 'https://www.glassdoor.com'),
+        (gen_random_uuid(), 'ZipRecruiter', 'https://www.ziprecruiter.com'),
+        (gen_random_uuid(), 'Monster', 'https://www.monster.com'),
+        (gen_random_uuid(), 'SimplyHired', 'https://www.simplyhired.com'),
+        (gen_random_uuid(), 'CareerBuilder', 'https://www.careerbuilder.com'),
+        (gen_random_uuid(), 'Dice', 'https://www.dice.com'),
+        (gen_random_uuid(), 'AngelList', 'https://angel.co/jobs'),
+        (gen_random_uuid(), 'Stack Overflow Jobs', 'https://stackoverflow.com/jobs'),
+        (gen_random_uuid(), 'Hired', 'https://hired.com'),
+        (gen_random_uuid(), 'FlexJobs', 'https://www.flexjobs.com'),
+        (gen_random_uuid(), 'Remote.co', 'https://remote.co/remote-jobs'),
+        (gen_random_uuid(), 'Job.com', 'https://www.job.com'),
+        (gen_random_uuid(), 'Snagajob', 'https://www.snagajob.com');
   `;
 
   await pool.query(query);
@@ -191,12 +192,15 @@ export async function seedApplications() {
     });
 
     for (const app of applications) {
-      await pool.query(
-        `INSERT INTO applications (user_id, company_id, job_board_id, job_title, status, applied_at)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT DO NOTHING`,
-        [app.user_id, app.company_id, app.job_board_id, app.job_title, app.status, app.applied_at]
-      );
+        const appliedISO = app.applied_at.toISOString();
+        await pool.query(
+            `INSERT INTO applications 
+                (user_id, company_id, job_board_id, job_title, status, applied_at, last_updated)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT DO NOTHING`,
+            [app.user_id, app.company_id, app.job_board_id, app.job_title, app.status, appliedISO, appliedISO]
+        );
+
     }
 
     console.log(`${applications.length} applications seeded.`);
