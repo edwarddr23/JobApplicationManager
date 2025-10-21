@@ -26,7 +26,7 @@ const ChangePassword: React.FC = () => {
     }
 
     try {
-      const res = await fetch('/api/changepassword', {
+      const res = await fetch('/changepassword', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -179,7 +179,7 @@ app.post('/createuser', async (req: Request, res: Response) => {
   }
 });
 
-app.post("/api/changepassword", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+app.post("/changepassword", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   const { newPassword, confirmPassword } = req.body;
 
   // Check if password fields are provided
