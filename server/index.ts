@@ -110,6 +110,21 @@ app.post('/logout', (req: Request, res: Response) => {
   });
 });
 
+app.get('/loggedin', (req: Request, res: Response) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.json({ loggedIn: false });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, decoded: any) => {
+    if (err) return res.json({ loggedIn: false });
+
+    res.json({ loggedIn: true, userId: decoded.userId });
+  });
+});
+
 async function insertUser(user: { username: string, firstname: string, lastname: string, email: string, password: string}) {
   const result = await pool.query(
     `INSERT INTO users (username, firstname, lastname, email, password)
@@ -179,6 +194,7 @@ app.post('/createuser', async (req: Request, res: Response) => {
   }
 });
 
+// Change password endpoint.
 app.post("/changepassword", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   const { newPassword, confirmPassword } = req.body;
 
@@ -212,6 +228,37 @@ app.post("/changepassword", authenticateToken, async (req: AuthenticatedRequest,
   } catch (err: unknown) {
     console.error("Change password error:", err);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Fetch all applications endpoint.
+app.get('/applications', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.userId) {
+    return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+  }
+
+  try {
+    // Fetch applications for the logged-in user, ordered by applied_at
+    const result = await pool.query(
+      'SELECT * FROM applications WHERE user_id = $1 ORDER BY applied_at DESC',
+      [req.userId]
+    );
+
+    res.json(result.rows);
+  } catch (err: unknown) {
+    console.error('Error fetching applications:', err);
+    res.status(500).json({ error: 'Database query failed' });
+  }
+});
+
+// Fetch all job boards endpoint.
+app.get('/jobboards', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const result = await pool.query('SELECT id, name FROM job_boards ORDER BY name ASC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching job boards:', err);
+    res.status(500).json({ error: 'Database query failed' });
   }
 });
 

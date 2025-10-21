@@ -26,7 +26,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetch('/api/loggedin', { credentials: 'include' })
+    fetch('/loggedin', { credentials: 'include' })
       .then(res => {
         if (res.status === 401) return null;
         return res.json();
