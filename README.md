@@ -2,8 +2,8 @@
 
 Note that each of these directories hold its own docker container. There are 3 containers for this fullstack application: db, client, and server. These can be all run at once using the docker-cmpose.yml at the project root. To run this project as a whole (in dev that is, as it is only configured to dev right now), run:
 
-### `docker-compose build`
-### `docker-compose run`
+### `docker compose build`
+### `docker compose run up`
 
 Then it should start running.
 
