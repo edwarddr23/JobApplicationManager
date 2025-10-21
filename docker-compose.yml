@@ -9,7 +9,7 @@ services:
       - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
       - ./server:/app
-      # - /app/node_modules
+      - /app/node_modules
     depends_on:
       - postgres
     command: npm run dev
