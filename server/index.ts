@@ -301,6 +301,7 @@ app.post('/application', authenticateToken, async (req: AuthenticatedRequest, re
 
     let companyId: string;
 
+    // If the company does not exist already, add it to the DB.
     if (companyResult.rows.length === 0) {
       // Insert new company
       const insertCompany = await pool.query(
