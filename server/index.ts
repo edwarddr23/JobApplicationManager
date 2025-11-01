@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import { pool, testConnection } from './db'
 import { authenticateToken } from './middleware/auth';
 import { initializeTables } from './db/init';
+import { QueryResult } from 'pg';
 
 declare module 'express-session' {
   interface SessionData {
@@ -484,6 +485,92 @@ app.delete('/companies/:companyId', authenticateToken, async (req: Authenticated
   } catch (err) {
     console.error('Error deleting company:', err);
     res.status(500).json({ error: 'Server error while removing company' });
+  }
+});
+
+// Edit company functionality.
+app.put('/companies/:companyId', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.userId) {
+    return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+  }
+
+  const { companyId } = req.params;
+  const { name, website, location } = req.body;
+
+  if (!companyId) {
+    return res.status(400).json({ error: 'Company ID is required' });
+  }
+
+  if (!name && !website && !location) {
+    return res.status(400).json({ error: 'At least one field (name, website, location) must be provided' });
+  }
+
+  try {
+    // Check if the company exists and belongs to this user
+    const companyResult = await pool.query(
+      'SELECT * FROM companies WHERE id = $1 AND user_id = $2',
+      [companyId, req.userId]
+    );
+
+    if (companyResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Company not found or not owned by user' });
+    }
+
+    // If the name or location is being updated, check for duplicate name-location pairs
+    if (name || location) {
+      const newName = name || companyResult.rows[0].name;
+      const newLocation = location || companyResult.rows[0].location;
+      interface CompanyRow {
+        id: string;
+      }
+
+      const duplicateCheck: QueryResult<CompanyRow> = await pool.query<CompanyRow>(
+        'SELECT id FROM companies WHERE name = $1 AND location = $2 AND id != $3',
+        [newName, newLocation, companyId]
+      );
+
+      if (duplicateCheck?.rowCount && duplicateCheck.rowCount > 0) {
+        return res.status(400).json({ error: 'A company with this name and location already exists' });
+      }
+    }
+
+    // Build dynamic update query
+    const fields: string[] = [];
+    const values: any[] = [];
+    let counter = 1;
+
+    if (name) {
+      fields.push(`name = $${counter++}`);
+      values.push(name);
+    }
+    if (website) {
+      fields.push(`website = $${counter++}`);
+      values.push(website);
+    }
+    if (location) {
+      fields.push(`location = $${counter++}`);
+      values.push(location);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    values.push(companyId, req.userId); // for WHERE clause
+
+    const updateQuery = `
+      UPDATE companies
+      SET ${fields.join(', ')}
+      WHERE id = $${counter++} AND user_id = $${counter}
+      RETURNING *
+    `;
+
+    const updatedCompany = await pool.query(updateQuery, values);
+
+    res.json({ message: 'Company updated successfully', company: updatedCompany.rows[0] });
+  } catch (err) {
+    console.error('Error updating company:', err);
+    res.status(500).json({ error: 'Server error while updating company' });
   }
 });
 
