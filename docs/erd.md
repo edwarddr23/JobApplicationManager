@@ -17,6 +17,7 @@ erDiagram
 
   companies {
     uuid id PK
+    uuid user_id FK
     text name UK
     text website
     text location

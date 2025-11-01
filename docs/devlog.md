@@ -6,6 +6,7 @@
     - <b>(Backend)</b>:
         - Endpoint for adding a company to the db using a company name passed in (/addcompany)
         - Endpoint for deleting a company from the db using a company name passed in (/removecompany)
+        - Endpoint for fetching all companies from db (/companies)
     - <b>(Frontend)</b>: On the home page, there should be a "Configure" page. "Configure" should be found in the home navbar. After selecting "Configure", the user should be led to a page with its own sidebar, which has several options, the one relevant to this being "Companies". The "Companies" page should have a dropdown that lets the user select an existing company in the database and lets them delete it using a delete button. after doing so, it should notify them that the company in question has been deleted. There should also be a section for adding a company, where an input box allows the user to enter a name for a company, and then that name should be validated, parsed, and saved to the database.
 
 ## Job board add/deletion functionality.

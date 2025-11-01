@@ -20,6 +20,7 @@ export async function createCompaniesTable() {
   const query = `
     CREATE TABLE IF NOT EXISTS companies (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id),
         name TEXT UNIQUE NOT NULL,
         website TEXT,
         location TEXT,
@@ -95,24 +96,24 @@ export async function seedJobBoards() {
 // Showcase and dev purposes only:
 export async function seedCompanies() {
   const companies = [
-    { name: 'TechCorp', website: 'https://techcorp.com', location: 'NY' },
-    { name: 'BizSoft', website: 'https://bizsoft.com', location: 'CA' },
-    { name: 'InnovateX', website: 'https://innovatex.com', location: 'TX' },
-    { name: 'NextGen Solutions', website: 'https://nextgensolutions.com', location: 'WA' },
-    { name: 'Alpha Systems', website: 'https://alphasystems.com', location: 'MA' },
-    { name: 'BetaWorks', website: 'https://betaworks.com', location: 'FL' },
-    { name: 'CloudNine', website: 'https://cloudnine.com', location: 'CO' },
-    { name: 'DataForge', website: 'https://dataforge.com', location: 'IL' },
-    { name: 'QuantumLeap', website: 'https://quantumleap.com', location: 'CA' },
-    { name: 'Visionary Labs', website: 'https://visionarylabs.com', location: 'NY' },
+    { name: 'TechCorp', website: 'https://techcorp.com', location: 'NY', user_id: null },
+    { name: 'BizSoft', website: 'https://bizsoft.com', location: 'CA', user_id: null },
+    { name: 'InnovateX', website: 'https://innovatex.com', location: 'TX', user_id: null },
+    { name: 'NextGen Solutions', website: 'https://nextgensolutions.com', location: 'WA', user_id: null },
+    { name: 'Alpha Systems', website: 'https://alphasystems.com', location: 'MA', user_id: null },
+    { name: 'BetaWorks', website: 'https://betaworks.com', location: 'FL', user_id: null },
+    { name: 'CloudNine', website: 'https://cloudnine.com', location: 'CO', user_id: null },
+    { name: 'DataForge', website: 'https://dataforge.com', location: 'IL', user_id: null },
+    { name: 'QuantumLeap', website: 'https://quantumleap.com', location: 'CA', user_id: null },
+    { name: 'Visionary Labs', website: 'https://visionarylabs.com', location: 'NY', user_id: null },
   ];
 
   for (const c of companies) {
     await pool.query(
-      `INSERT INTO companies (name, website, location)
-       VALUES ($1, $2, $3)
+      `INSERT INTO companies (name, website, location, user_id)
+       VALUES ($1, $2, $3, $4)
        ON CONFLICT (name) DO NOTHING`,
-      [c.name, c.website, c.location]
+      [c.name, c.website, c.location, c.user_id]
     );
   }
   console.log('Companies seeded.');
