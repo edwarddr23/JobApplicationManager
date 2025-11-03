@@ -2,13 +2,11 @@ import assert from 'assert';
 import fetch from 'node-fetch';
 import jwt from 'jsonwebtoken';
 import { describe, it, before, after } from 'node:test';
-import { v4 as uuidv4 } from 'uuid';
-import { pool, testConnection } from '../db/index'; // .ts not needed with ts-node
+import { pool, testConnection } from '../db/index';
 import dotenv from 'dotenv';
 import path from 'path';
 
 declare global {
-  // You can pick types that match your data
   var TEST_USER_ID: string;
   var TEST_JWT: string;
 }
@@ -60,7 +58,7 @@ describe('Job Boards Endpoints', () => {
     });
 
     assert.strictEqual(res.status, 200);
-    const data = (await res.json()) as JobBoardsResponse; // <-- cast here
+    const data = (await res.json()) as JobBoardsResponse;
     assert.ok(Array.isArray(data.job_boards));
   });
 
@@ -74,7 +72,7 @@ describe('Job Boards Endpoints', () => {
     });
 
     assert.strictEqual(res.status, 200);
-    const data = (await res.json()) as AddJobBoardResponse; // <-- cast here
+    const data = (await res.json()) as AddJobBoardResponse;
     assert.ok(data.isUserAdded);
   });
 
