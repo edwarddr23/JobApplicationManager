@@ -17,7 +17,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 console.log('JWT_SECRET=', process.env.JWT_SECRET);
 
 interface JobBoardsResponse {
-  jobBoards: Array<{ id: string; name: string; url: string; user_id?: string }>;
+  job_boards: Array<{ id: string; name: string; url: string; user_id?: string }>;
 }
 
 interface AddJobBoardResponse {
@@ -55,19 +55,19 @@ describe('Job Boards Endpoints', () => {
   });
 
   it('should fetch all job boards', async () => {
-    const res = await fetch(`${SERVER_URL}/jobBoards`, {
+    const res = await fetch(`${SERVER_URL}/job-boards`, {
       headers: { Authorization: `Bearer ${globalThis.TEST_JWT}` },
     });
 
     assert.strictEqual(res.status, 200);
     const data = (await res.json()) as JobBoardsResponse; // <-- cast here
-    assert.ok(Array.isArray(data.jobBoards));
+    assert.ok(Array.isArray(data.job_boards));
   });
 
   it('should add a new user job board', async () => {
     const newBoard = { name: 'TestBoard', url: 'https://testboard.com' };
 
-    const res = await fetch(`${SERVER_URL}/jobBoard`, {
+    const res = await fetch(`${SERVER_URL}/job-board`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TEST_JWT}` },
       body: JSON.stringify(newBoard),
@@ -87,7 +87,7 @@ describe('Job Boards Endpoints', () => {
     );
     const jobBoardId = rows[0].id;
 
-    const res = await fetch(`${SERVER_URL}/jobBoards/${jobBoardId}`, {
+    const res = await fetch(`${SERVER_URL}/job-boards/${jobBoardId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${TEST_JWT}` },
     });
