@@ -22,6 +22,16 @@ interface AddJobBoardResponse {
   isUserAdded: boolean;
 }
 
+interface UpdateJobBoardResponse {
+  message: string;
+  jobBoard: {
+    id: string;
+    name: string;
+    url: string | null;
+    user_id?: string | null;
+  };
+}
+
 const SERVER_URL = 'http://localhost:5000';
 
 describe('Job Boards Endpoints', () => {
@@ -94,5 +104,31 @@ describe('Job Boards Endpoints', () => {
 
     const check = await pool.query('SELECT * FROM job_boards WHERE id = $1', [jobBoardId]);
     assert.strictEqual(check.rowCount, 0);
+  });
+
+  it('should update a user-added job board', async () => {
+    // Insert a job board to update
+    const { rows } = await pool.query(
+      `INSERT INTO job_boards (name, url, user_id)
+      VALUES ($1, $2, $3) RETURNING id`,
+      ['UpdateBoard', 'https://updateboard.com', TEST_USER_ID]
+    );
+    const jobBoardId = rows[0].id;
+
+    // PATCH the job board
+    const updatedData = { name: 'UpdatedBoardName', url: 'https://updatedurl.com' };
+    const res = await fetch(`${SERVER_URL}/job-boards/${jobBoardId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TEST_JWT}` },
+      body: JSON.stringify(updatedData),
+    });
+
+    assert.strictEqual(res.status, 200);
+    const data = (await res.json()) as UpdateJobBoardResponse;
+    assert.strictEqual(data.jobBoard.name, updatedData.name);
+    assert.strictEqual(data.jobBoard.url, updatedData.url);
+
+    // Clean up
+    await pool.query('DELETE FROM job_boards WHERE id = $1', [jobBoardId]);
   });
 });

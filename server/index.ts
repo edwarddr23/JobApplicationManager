@@ -683,9 +683,8 @@ app.delete('/job-boards/:jobBoardId', authenticateToken, async (req: Authenticat
   }
 });
 
-
 // Edit job board endpoint.
-app.put('/job-boards/:jobBoardId', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+app.patch('/job-boards/:jobBoardId', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   if (!req.userId) {
     return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
   }
@@ -693,12 +692,13 @@ app.put('/job-boards/:jobBoardId', authenticateToken, async (req: AuthenticatedR
   const { jobBoardId } = req.params;
   const { name, url } = req.body;
 
+  // At least one field must be provided
   if (!name && !url) {
     return res.status(400).json({ error: 'At least one field (name or url) must be provided' });
   }
 
   try {
-    // Check if this job board belongs to the user
+    // Ensure this job board belongs to the user
     const existing = await pool.query(
       'SELECT * FROM job_boards WHERE id = $1 AND user_id = $2',
       [jobBoardId, req.userId]
@@ -708,7 +708,7 @@ app.put('/job-boards/:jobBoardId', authenticateToken, async (req: AuthenticatedR
       return res.status(404).json({ error: 'Job board not found or not owned by user' });
     }
 
-    // Build dynamic update query
+    // Build dynamic update query for only provided fields
     const fields: string[] = [];
     const values: any[] = [];
     let counter = 1;
@@ -722,7 +722,8 @@ app.put('/job-boards/:jobBoardId', authenticateToken, async (req: AuthenticatedR
       values.push(url);
     }
 
-    values.push(jobBoardId, req.userId); // WHERE conditions
+    // Add WHERE clause values
+    values.push(jobBoardId, req.userId);
 
     const updateQuery = `
       UPDATE job_boards

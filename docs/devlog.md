@@ -14,8 +14,9 @@
 - A user should be able to insert and delete job boards manually from a dedicated page.
 - Deliverables:<br>
     - <b>(Backend)</b>:
-        - Endpoint for adding a job board to the db using a job board name passed in (/addjobboard)
-        - Endpoint for deleting a job board from the db using a job board name passed in (/removejobboard)
+        - Endpoint for fetching all job boards from db (GET /job-boards)
+        - Endpoint for adding a job board to the db using a job board name passed in (/job-board)
+        - Endpoint for deleting a job board from the db using a job board ID passed in ('/job-boards/:jobBoardId')
     - <b>(Frontend)</b>: On the home page, there should be a "Configure" page. "Configure" should be found in the home navbar. After selecting "Configure", the user should be led to a page with its own sidebar, which has several options, the one relevant to this being "Job Boards". The "Job Boards" page should have a dropdown that lets the user select an existing job board in the database and lets them delete it using a delete button. after doing so, it should notify them that the job board in question has been deleted. There should also be a section for adding a job board, where an input box allows the user to enter a name for a job board, and then that name should be validated, parsed, and saved to the database.
 
 ## Quick Draw functionality.
