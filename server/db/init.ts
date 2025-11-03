@@ -20,7 +20,7 @@ export async function createCompaniesTable() {
   const query = `
     CREATE TABLE IF NOT EXISTS companies (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID REFERENCES users(id),
+        user_id UUID REFERENCES users(id) ON DELETE SET NULL,
         name TEXT UNIQUE NOT NULL,
         website TEXT,
         location TEXT,
@@ -35,6 +35,7 @@ export async function createJobBoardsTable() {
   const query = `
     CREATE TABLE IF NOT EXISTS job_boards (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id) ON DELETE SET NULL,
         name TEXT UNIQUE NOT NULL,
         url TEXT
     );
@@ -47,9 +48,9 @@ export async function createApplicationsTable() {
   const query = `
     CREATE TABLE IF NOT EXISTS applications (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID REFERENCES users(id),
-        company_id UUID REFERENCES companies(id),
-        job_board_id UUID REFERENCES job_boards(id),
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
+        job_board_id UUID REFERENCES job_boards(id) ON DELETE SET NULL,
         job_title TEXT NOT NULL,
         status TEXT CHECK (status IN ('applied','offer','rejected','withdrawn')),
         applied_at TIMESTAMPTZ DEFAULT now(),
