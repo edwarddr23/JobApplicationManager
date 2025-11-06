@@ -76,7 +76,7 @@ router.patch('/:id', authenticateToken, async (req: AuthenticatedRequest, res: R
       return res.status(404).json({ error: 'Tagvalue not found' });
     }
 
-    // ✅ Wrap the response
+    // Wrap the response
     res.json({ tagvalue: result.rows[0] });
   } catch (err: any) {
     console.error('Update tagvalue error:', err);
