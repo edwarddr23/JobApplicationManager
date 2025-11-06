@@ -16,7 +16,7 @@ const Login: React.FC = () => {
     setError("");
 
     try {
-      const res = await fetch("/login", {
+      const res = await fetch("/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -24,6 +24,7 @@ const Login: React.FC = () => {
         credentials: "include",
         body: JSON.stringify({ username, password }),
       });
+
 
       if (res.ok) {
         const data: { user: any } = await res.json();

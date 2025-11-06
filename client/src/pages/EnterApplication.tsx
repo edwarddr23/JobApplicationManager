@@ -22,11 +22,18 @@ const EnterApplication: React.FC = () => {
   useEffect(() => {
     if (!token) return;
 
-    fetch('/jobboards', {
+    fetch('/job-boards', {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
-      .then(data => setJobBoards(data))
+      .then(data => {
+        if (data.job_boards && Array.isArray(data.job_boards)) {
+          setJobBoards(data.job_boards);
+        } else {
+          console.error('Unexpected job boards response:', data);
+          setJobBoards([]);
+        }
+      })
       .catch(err => console.error('Failed to fetch job boards:', err));
   }, [token]);
 
@@ -40,7 +47,7 @@ const EnterApplication: React.FC = () => {
     }
 
     try {
-      const res = await fetch('/application', {
+      const res = await fetch('/applications', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,7 +60,7 @@ const EnterApplication: React.FC = () => {
           status,
         }),
       });
-
+      
       if (res.ok) {
         navigate('/');
       } else {

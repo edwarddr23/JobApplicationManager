@@ -19,7 +19,7 @@ function Navbar({ links }: NavbarProps){
 
     const handleLogout = async() => {
         try{
-            const res = await fetch("/logout", {
+            const res = await fetch("/auth/logout", {
                 method: "POST",
                 credentials: "include"
             });

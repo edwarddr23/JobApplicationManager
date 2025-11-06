@@ -25,13 +25,13 @@ const CreateUser: React.FC = () => {
     }
 
     try {
-      const res = await fetch("/createuser", {
+      const res = await fetch("/auth/createuser", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ username, firstname, lastname, password }),
+        body: JSON.stringify({ username, firstname, lastname, email, password }),
       });
 
       if (res.ok) {
