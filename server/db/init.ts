@@ -61,6 +61,23 @@ export async function createApplicationsTable() {
   console.log('Applications table ensured.');
 }
 
+export async function createTagValuesTable() {
+  const query = `
+    CREATE TABLE IF NOT EXISTS tagvalues (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        tag TEXT NOT NULL,
+        value TEXT NOT NULL,
+        type TEXT CHECK (type IN ('link', 'text')) NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT now(),
+        updated_at TIMESTAMPTZ DEFAULT now(),
+        UNIQUE (user_id, tag)
+    );
+  `;
+  await pool.query(query);
+  console.log('TagValues table ensured.');
+}
+
 export async function seedJobBoards() {
   // Check if job_boards table already has entries
   const result = await pool.query('SELECT COUNT(*) FROM job_boards');
@@ -211,16 +228,44 @@ export async function seedApplications() {
   }
 }
 
+export async function seedTagValues() {
+  const { rows: users } = await pool.query('SELECT id FROM users');
+
+  if (users.length === 0) {
+    console.log('No users found, skipping tagvalues seed.');
+    return;
+  }
+
+  for (const user of users) {
+    const userId = user.id;
+
+    const query = `
+      INSERT INTO tagvalues (user_id, tag, value, type)
+      VALUES 
+        ($1, 'LinkedIn URL', 'https://linkedin.com/in/example', 'link'),
+        ($1, 'Portfolio', 'https://myportfolio.com', 'link'),
+        ($1, 'Bio', 'Software engineer passionate about web dev.', 'text')
+      ON CONFLICT (user_id, tag) DO NOTHING;
+    `;
+
+    await pool.query(query, [userId]);
+  }
+
+  console.log(`TagValues seeded for ${users.length} user(s).`);
+}
+
 export async function initializeTables() {
-    await createUsersTable();
-    await createCompaniesTable();
-    await createJobBoardsTable();
-    await createApplicationsTable();
+  await createUsersTable();
+  await createCompaniesTable();
+  await createJobBoardsTable();
+  await createApplicationsTable();
+  await createTagValuesTable();
 
-    await seedUsers();
-    await seedCompanies();
-    await seedJobBoards();
-    await seedApplications();
+  await seedUsers();
+  await seedCompanies();
+  await seedJobBoards();
+  await seedApplications();
+  await seedTagValues();
 
-    console.log('All tables initialized.');
+  console.log('All tables initialized.');
 }
