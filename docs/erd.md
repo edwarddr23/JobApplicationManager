@@ -1,3 +1,11 @@
+# JobApplicationManager — ERD (Entity Relationship Diagram)
+
+This ERD reflects the current schema in `server/db/init.ts`.  
+
+---
+
+## 1. Mermaid ER Diagram
+
 ```mermaid
 erDiagram
     USERS {
@@ -46,11 +54,11 @@ erDiagram
         TIMESTAMPTZ updated_at
     }
 
-    %% Relationships (all 1-to-many)
-    USERS      ||--o{ COMPANIES    : owns
-    USERS      ||--o{ JOB_BOARDS   : uses
-    USERS      ||--o{ APPLICATIONS : submits
-    USERS      ||--o{ TAGVALUES    : has
+    %% Relationships (cardinality)
+    USERS ||--o{ COMPANIES    : owns
+    USERS ||--o{ JOB_BOARDS   : uses
+    USERS ||--o{ APPLICATIONS : submits
+    USERS ||--o{ TAGVALUES    : has
 
-    COMPANIES  ||--o{ APPLICATIONS : receives
-    JOB_BOARDS ||--o{ APPLICATIONS : source_of
+    COMPANIES ||--o{ APPLICATIONS   : receives
+    JOB_BOARDS ||--o{ APPLICATIONS  : source_of
