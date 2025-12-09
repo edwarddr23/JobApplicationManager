@@ -1,43 +1,64 @@
-# ERD (Core)
+# JobApplicationManager — ERD (Entity Relationship Diagram)
+
+This ERD reflects the current schema in `server/db/init.ts`.  
+
+---
+
+## 1. Mermaid ER Diagram
 
 ```mermaid
 erDiagram
-  users ||--o{ applications : "applies to"
-  companies ||--o{ applications : "has apps"
-  job_boards ||--o{ applications : "source"
+    USERS {
+        UUID id PK
+        TEXT username UK
+        TEXT firstname
+        TEXT lastname
+        TEXT email
+        TEXT password
+    }
 
-  users {
-    uuid id PK
-    text username UK
-    text firstname
-    text lastname
-    text password
-    text email
-  }
+    COMPANIES {
+        UUID id PK
+        UUID user_id FK
+        TEXT name UK
+        TEXT website
+        TEXT location
+        TIMESTAMPTZ created_at
+    }
 
-  companies {
-    uuid id PK
-    uuid user_id FK
-    text name UK
-    text website
-    text location
-    timestamptz created_at
-  }
+    JOB_BOARDS {
+        UUID id PK
+        UUID user_id FK
+        TEXT name UK
+        TEXT url
+    }
 
-  job_boards {
-    uuid id PK
-    text name UK
-    text url
-  }
+    APPLICATIONS {
+        UUID id PK
+        UUID user_id FK
+        UUID company_id FK
+        UUID job_board_id FK
+        TEXT job_title
+        TEXT status
+        TIMESTAMPTZ applied_at
+        TIMESTAMPTZ last_updated
+    }
 
-  applications {
-    uuid user_id FK
-    uuid company_id FK
-    uuid job_board_id FK
-    text job_title
-    text status        "applied,offer,rejected,withdrawn"
-    timestamptz applied_at
-    timestamptz last_updated
-    PK "user_id, company_id, job_board_id"
-  }
+    TAGVALUES {
+        UUID id PK
+        UUID user_id FK
+        TEXT tag
+        TEXT value
+        TEXT type
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
 
+    %% Relationships (cardinality)
+    USERS ||--o{ COMPANIES    : owns
+    USERS ||--o{ JOB_BOARDS   : uses
+    USERS ||--o{ APPLICATIONS : submits
+    USERS ||--o{ TAGVALUES    : has
+
+    COMPANIES ||--o{ APPLICATIONS   : receives
+    JOB_BOARDS ||--o{ APPLICATIONS  : source_of
