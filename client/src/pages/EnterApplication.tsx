@@ -158,16 +158,6 @@ const EnterApplication: React.FC = () => {
 
         {/* Company selection */}
         <div style={{ marginBottom: 12 }}>
-          <label>
-            <input
-              type="radio"
-              name="companyMode"
-              value="manual"
-              checked={companyMode === 'manual'}
-              onChange={() => setCompanyMode('manual')}
-            />
-            Enter company manually
-          </label>
           <label style={{ marginLeft: 16 }}>
             <input
               type="radio"
@@ -177,6 +167,16 @@ const EnterApplication: React.FC = () => {
               onChange={() => setCompanyMode('select')}
             />
             Select from existing companies
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="companyMode"
+              value="manual"
+              checked={companyMode === 'manual'}
+              onChange={() => setCompanyMode('manual')}
+            />
+            Enter company manually
           </label>
         </div>
 
