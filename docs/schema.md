@@ -1,75 +1,56 @@
-# Schema Design — Job Application Manager
+# JobApplicationManager – Database Schema & ERD
 
-Version: new_db branch  
-Context: Dockerized Postgres 16; server Node/Express; client Vite/React
+---
 
-## Tables
+## 1. Tables
 
-### users
-- id uuid PK
-- username text UNIQUE NOT NULL
-- (future: email, password_hash, created_at)
+### 1.1 `users`
 
-### companies
-- id uuid PK
-- name text UNIQUE NOT NULL
+```sql
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username TEXT UNIQUE NOT NULL,
+    firstname TEXT NOT NULL,
+    lastname TEXT NOT NULL,
+    email TEXT,
+    password TEXT NOT NULL
+);
 
-### job_boards
-- id uuid PK
-- name text UNIQUE NOT NULL
+CREATE TABLE IF NOT EXISTS companies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    name TEXT UNIQUE NOT NULL,
+    website TEXT,
+    location TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
 
-### applications
-- id uuid PK
-- user_id uuid NOT NULL references users(id)
-- company_id uuid NOT NULL references companies(id)
-- job_board_id uuid NOT NULL references job_boards(id)
-- job_title text NOT NULL
-- status text CHECK (status IN ('applied','interview','offer','rejected','withdrawn')) DEFAULT 'applied'
-- applied_at timestamptz DEFAULT now()
-- last_updated timestamptz DEFAULT now()
+CREATE TABLE IF NOT EXISTS job_boards (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    name TEXT UNIQUE NOT NULL,
+    url TEXT
+);
 
-## Constraints and Indexes
+CREATE TABLE IF NOT EXISTS applications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
+    job_board_id UUID REFERENCES job_boards(id) ON DELETE SET NULL,
+    job_title TEXT NOT NULL,
+    status TEXT CHECK (status IN ('applied','offer','rejected','withdrawn')),
+    applied_at TIMESTAMPTZ DEFAULT now(),
+    last_updated TIMESTAMPTZ DEFAULT now()
+);
 
-- Foreign keys: ON DELETE RESTRICT to protect history
-- Uniques:
-  - users.username
-  - companies.name
-  - job_boards.name
-- Helpful indexes:
-  - applications(user_id)
-  - applications(company_id)
-  - applications(job_board_id)
-  - applications(status) optional
+CREATE TABLE IF NOT EXISTS tagvalues (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    tag TEXT NOT NULL,
+    value TEXT NOT NULL,
+    type TEXT CHECK (type IN ('link', 'text')) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE (user_id, tag)
+);
 
-## Typical Queries
-
-User’s applications with lookups:
-
-SELECT a.*, c.name AS company_name, jb.name AS job_board_name
-FROM applications a
-JOIN companies c   ON c.id = a.company_id
-JOIN job_boards jb ON jb.id = a.job_board_id
-WHERE a.user_id = $1
-ORDER BY a.last_updated DESC;
-
-Filter by status:
-
-SELECT *
-FROM applications
-WHERE user_id = $1 AND status = ANY($2::text[])
-ORDER BY applied_at DESC;
-
-## Data Flow
-
-Public:
-- GET /companies -> [{ id, name }]
-- GET /job-boards -> [{ id, name }]
-
-Protected (JWT):
-- GET /applications?username=<user> -> user-scoped rows
-
-## Future
-
-- Add users.email and users.password_hash for real auth
-- Consider soft delete columns (deleted_at)
-- Consider composite index (user_id, status) if needed
