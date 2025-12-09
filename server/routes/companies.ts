@@ -12,30 +12,26 @@ interface AuthenticatedRequest extends Request {
 /* =============================
    Fetch all companies endpoint.
 ============================= */
-router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.userId) return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+router.get('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  if (!req.userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
     const result = await pool.query(
-      `SELECT id, user_id, name, website, location, created_at
-       FROM companies
-       WHERE user_id IS NULL OR user_id = $1
-       ORDER BY created_at DESC`,
+      `
+      SELECT
+        id,
+        name,
+        website,
+        location,
+        user_id = $1 AS "userAdded"
+      FROM companies
+      WHERE user_id = $1 OR user_id IS NULL
+      ORDER BY name ASC
+      `,
       [req.userId]
     );
 
-    res.json({
-      count: result.rowCount,
-      companies: result.rows.map(row => ({
-        id: row.id,
-        // true if the company was added by this user, false if it was a seeded one
-        user_id: row.user_id === req.userId,
-        name: row.name,
-        website: row.website || null,
-        location: row.location || null,
-        created_at: row.created_at
-      }))
-    });
+    res.json({ companies: result.rows });
   } catch (err) {
     console.error('Error fetching companies:', err);
     res.status(500).json({ error: 'Database query failed' });
@@ -115,49 +111,56 @@ router.delete('/:companyId', authenticateToken, async (req: AuthenticatedRequest
 });
 
 /* =============================
-   Edit company functionality.
+   Update company endpoint.
 ============================= */
-router.put('/:companyId', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.userId) return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
-
-  const { companyId } = req.params;
+router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
   const { name, website, location } = req.body;
 
-  if (!companyId) return res.status(400).json({ error: 'Company ID is required' });
-  if (!name && !website && !location) return res.status(400).json({ error: 'At least one field (name, website, location) must be provided' });
+  if (!req.userId) {
+    return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+  }
+
+  if (!name?.trim() && !website?.trim() && !location?.trim()) {
+    return res.status(400).json({ error: 'At least one of name, website, or location must be provided.' });
+  }
 
   try {
-    const companyResult = await pool.query(
-      'SELECT id FROM companies WHERE name = $1 AND (user_id IS NULL OR user_id = $2)',
-      [name, req.userId]
+    // Check for duplicate company name for this user
+    if (name?.trim()) {
+      const dupCheck = await pool.query(
+        `SELECT id FROM companies WHERE user_id = $1 AND name = $2 AND id != $3`,
+        [req.userId, name.trim(), id]
+      );
+
+      if (dupCheck.rowCount > 0) {
+        return res.status(409).json({ error: 'You already have a company with this name.' });
+      }
+    }
+
+    // 2️⃣ Update the company
+    const result = await pool.query(
+      `
+      UPDATE companies
+      SET name = COALESCE(NULLIF($1, ''), name),
+          website = COALESCE(NULLIF($2, ''), website),
+          location = COALESCE(NULLIF($3, ''), location)
+      WHERE id = $4 AND user_id = $5
+      RETURNING id, name, website, location;
+      `,
+      [name?.trim() || null, website?.trim() || null, location?.trim() || null, id, req.userId]
     );
 
-    if (companyResult.rowCount === 0) return res.status(404).json({ error: 'Company not found or not owned by user' });
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Company not found or you do not have permission to edit it.' });
+    }
 
-    const fields: string[] = [];
-    const values: any[] = [];
-    let counter = 1;
-
-    if (name) { fields.push(`name = $${counter++}`); values.push(name); }
-    if (website) { fields.push(`website = $${counter++}`); values.push(website); }
-    if (location) { fields.push(`location = $${counter++}`); values.push(location); }
-
-    values.push(companyId, req.userId);
-
-    const updateQuery = `
-      UPDATE companies
-      SET ${fields.join(', ')}
-      WHERE id = $${counter++} AND user_id = $${counter}
-      RETURNING *
-    `;
-
-    const updatedCompany = await pool.query(updateQuery, values);
-
-    res.json({ message: 'Company updated successfully', company: updatedCompany.rows[0] });
+    return res.json({ company: result.rows[0] });
   } catch (err) {
     console.error('Error updating company:', err);
-    res.status(500).json({ error: 'Server error while updating company' });
+    return res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 export default router;

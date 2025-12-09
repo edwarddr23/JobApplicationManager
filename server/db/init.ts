@@ -51,6 +51,7 @@ export async function createApplicationsTable() {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) ON DELETE CASCADE,
         company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
+        custom_company_name TEXT,
         job_board_id UUID REFERENCES job_boards(id) ON DELETE SET NULL,
         job_title TEXT NOT NULL,
         status TEXT CHECK (status IN ('applied','offer','rejected','withdrawn')),
@@ -256,17 +257,26 @@ export async function seedTagValues() {
 }
 
 export async function initializeTables() {
-  await createUsersTable();
-  await createCompaniesTable();
-  await createJobBoardsTable();
-  await createApplicationsTable();
-  await createTagValuesTable();
+    await createUsersTable();
+    await createCompaniesTable();
+    await createJobBoardsTable();
+    await createApplicationsTable();
+    await createTagValuesTable();
 
-  await seedUsers();
-  await seedCompanies();
-  await seedJobBoards();
-  await seedApplications();
-  await seedTagValues();
+    // ---------------- Check if database is empty ----------------
+    const { rows: userRows } = await pool.query('SELECT COUNT(*) FROM users');
+    const userCount = parseInt(userRows[0].count, 10);
 
-  console.log('All tables initialized.');
+    if (userCount === 0) {
+      console.log('Database is empty, seeding initial data...');
+      await seedUsers();
+      await seedCompanies();
+      await seedJobBoards();
+      await seedApplications();
+      await seedTagValues();
+    } else {
+      console.log('Database already has data, skipping seeding.');
+    }
+
+    console.log('All tables initialized.');
 }

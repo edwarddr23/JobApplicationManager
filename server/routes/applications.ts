@@ -1,17 +1,13 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import { pool } from '../db';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();
-
-interface AuthenticatedRequest extends Request {
-  userId?: number;
-}
 
 /* =============================
    Fetch all applications endpoint.
 ============================= */
-router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   if (!req.userId) {
     return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
   }
@@ -24,7 +20,7 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Respon
         a.user_id,
         u.username,
         a.company_id,
-        c.name AS company_name,
+        COALESCE(c.name, a.custom_company_name) AS company_name,
         a.job_board_id,
         jb.name AS job_board_name,
         a.job_title,
@@ -33,7 +29,7 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Respon
         a.last_updated
       FROM applications a
       JOIN users u ON a.user_id = u.id
-      JOIN companies c ON a.company_id = c.id
+      LEFT JOIN companies c ON a.company_id = c.id
       JOIN job_boards jb ON a.job_board_id = jb.id
       WHERE a.user_id = $1
       ORDER BY a.applied_at DESC
@@ -51,73 +47,68 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Respon
 /* =============================
    Submit (post) application endpoint.
 ============================= */
-router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.userId) {
-    return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
-  }
-
-  const { companyName, companyId, jobTitle, jobBoardId, status } = req.body;
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  const { companyId, companyName, jobTitle, jobBoardId, status } = req.body;
 
   // Validate required fields
-  if ((!companyName && !companyId) || !jobTitle || !jobBoardId || !status) {
-    return res.status(400).json({ error: 'All fields are required.' });
+  if (!jobTitle || !jobBoardId || !status) {
+    return res.status(400).json({ error: 'Missing required fields.' });
+  }
+
+  // Either a company must be selected or a custom name provided
+  if (!companyId && (!companyName || companyName.trim() === '')) {
+    return res.status(400).json({ error: 'You must provide a company.' });
   }
 
   try {
-    let finalCompanyId = companyId;
-
-    // If user entered company manually, insert it if it doesn't exist
-    if (!companyId && companyName) {
-      const companyResult = await pool.query(
-        'SELECT id FROM companies WHERE name = $1',
-        [companyName]
-      );
-
-      if (companyResult.rows.length === 0) {
-        const insertCompany = await pool.query(
-          'INSERT INTO companies (name) VALUES ($1) RETURNING id',
-          [companyName]
-        );
-        finalCompanyId = insertCompany.rows[0].id;
-      } else {
-        finalCompanyId = companyResult.rows[0].id;
-      }
-    }
-
-    // Insert the application
-    await pool.query(
-      `INSERT INTO applications (user_id, company_id, job_board_id, job_title, status)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [req.userId, finalCompanyId, jobBoardId, jobTitle, status]
+    const result = await pool.query(
+      `
+      INSERT INTO applications 
+      (user_id, company_id, custom_company_name, job_title, job_board_id, status)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id;
+      `,
+      [
+        req.userId,                     // authenticated user
+        companyId || null,              // selected company (nullable)
+        companyName?.trim() || null,    // manual company name (nullable)
+        jobTitle.trim(),
+        jobBoardId,
+        status,
+      ]
     );
 
-    res.json({ message: 'Application submitted successfully' });
+    return res.json({ application_id: result.rows[0].id });
   } catch (err) {
-    console.error('Error inserting application:', err);
-    res.status(500).json({ error: 'Server error while submitting application' });
+    console.error('Insert failed:', err);
+    return res.status(500).json({ error: 'Server error.' });
   }
 });
 
-
 /* =============================
-   Application status update endpoint.
+   Update application status endpoint.
 ============================= */
-router.patch('/:userId/:companyId/:jobBoardId', async (req: Request, res: Response) => {
-  const { userId, companyId, jobBoardId } = req.params;
+router.patch('/:companyId/:jobBoardId', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  const { companyId, jobBoardId } = req.params;
   const { status } = req.body;
 
+  if (!req.userId) return res.status(401).json({ error: 'Unauthorized' });
   if (!['applied','offer','rejected','withdrawn'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
 
   try {
-    await pool.query(
+    const result = await pool.query(
       `UPDATE applications
-       SET status = $1,
-           last_updated = now()
+       SET status = $1, last_updated = now()
        WHERE user_id = $2 AND company_id = $3 AND job_board_id = $4`,
-      [status, userId, companyId, jobBoardId]
+      [status, req.userId, companyId, jobBoardId]
     );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
     res.json({ message: 'Status updated' });
   } catch (err) {
     console.error(err);
@@ -128,12 +119,10 @@ router.patch('/:userId/:companyId/:jobBoardId', async (req: Request, res: Respon
 /* =============================
    Delete application endpoint.
 ============================= */
-router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
 
-  if (!req.userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  if (!req.userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
     const result = await pool.query(

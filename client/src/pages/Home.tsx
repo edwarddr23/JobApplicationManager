@@ -73,7 +73,7 @@ const Home: React.FC = () => {
   const handleSave = async (index: number) => {
     const app = applications[index];
     try {
-      const res = await fetch(`/applications/${app.user_id}/${app.company_id}/${app.job_board_id}`, {
+      const res = await fetch(`/applications/${app.company_id}/${app.job_board_id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -85,11 +85,12 @@ const Home: React.FC = () => {
       if (res.ok) {
         const updatedApplications = [...applications];
         updatedApplications[index].status = newStatus as Application['status'];
-        updatedApplications[index].last_updated = new Date().toISOString(); // update locally
+        updatedApplications[index].last_updated = new Date().toISOString();
         setApplications(updatedApplications);
         setEditingIndex(null);
       } else {
-        console.error('Failed to update status');
+        const data = await res.json().catch(() => ({}));
+        console.error('Failed to update status', data.error);
       }
     } catch (err) {
       console.error(err);

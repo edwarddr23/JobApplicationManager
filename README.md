@@ -24,18 +24,8 @@ Building and running the client docker image is a little slow on windows, so if 
 
 However, you must test changes in docker to make sure it works between platforms. Docker compatibility must be tested as our development platforms are likely not the same (I develop on Linux). Also, this is best practice in case we need to present on a different system for presentations.
 
-
----
-
-## Quick Start for Local Verification
-
-Run all containers:
-
-docker compose up -d
-docker compose ps
-
-Server: http://localhost:3002
-Client: http://localhost:5175
+Server: http://localhost:3001
+Client: http://localhost:5000
 
 ## Temporary Auth Setup (no login route yet)
 

@@ -135,53 +135,57 @@ const ConfigureCompanies: React.FC = () => {
 
   const saveEdit = async (id: string) => {
     if (!editName.trim() && !editWebsite.trim() && !editLocation.trim()) {
-      setError('Name, website, or location must be provided');
-      return;
+        setError('Name, website, or location must be provided');
+        return;
     }
 
     setError(null);
     setLoading(true);
 
     try {
-      const res = await fetch(`/companies/${id}`, {
+        const res = await fetch(`/companies/${id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name: editName.trim(),
-          website: editWebsite.trim() || null,
-          location: editLocation.trim() || null,
+            name: editName.trim(),
+            website: editWebsite.trim() || null,
+            location: editLocation.trim() || null,
         }),
-      });
+        });
 
-      if (!res.ok) {
+        if (res.ok) {
+        const updated = await res.json();
+        setCompanies(prev =>
+            prev.map(c =>
+            c.id === id
+                ? {
+                    ...c,
+                    name: updated.company.name,
+                    website: updated.company.website,
+                    location: updated.company.location,
+                }
+                : c
+            )
+        );
+        setEditingId(null);
+        } else if (res.status === 409) {
+        // Handle duplicate name
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Failed to update company (status ${res.status})`);
-      }
-
-      const updated = await res.json();
-      setCompanies(prev =>
-        prev.map(c =>
-          c.id === id
-            ? {
-                ...c,
-                name: updated.company.name,
-                website: updated.company.website,
-                location: updated.company.location,
-              }
-            : c
-        )
-      );
-
-      setEditingId(null);
+        setError(data.error || 'A company with this name already exists.');
+        } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || `Failed to update company (status ${res.status})`);
+        }
     } catch (e: any) {
-      setError(e.message);
+        setError(e.message);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+    };
+
 
   const cancelEdit = () => setEditingId(null);
 
