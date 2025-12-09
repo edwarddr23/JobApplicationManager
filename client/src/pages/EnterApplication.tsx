@@ -29,41 +29,71 @@ const EnterApplication: React.FC = () => {
   const { user } = useAuth();
   const token = user?.token;
 
-  // Fetch job boards
+  // ---------------- Helper: check token ----------------
+  if (!token) {
+    console.warn('No token found. Please log in.');
+  }
+
+  // ---------------- Fetch job boards ----------------
   useEffect(() => {
     if (!token) return;
-    fetch('/job-boards', { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.json())
-      .then(data => {
-        if (data.job_boards && Array.isArray(data.job_boards)) setJobBoards(data.job_boards);
-        else setJobBoards([]);
-      })
-      .catch(err => console.error('Failed to fetch job boards:', err));
+
+    const fetchJobBoards = async () => {
+      try {
+        const res = await fetch('/job-boards', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`GET /job-boards failed: ${res.status}`);
+        const data = await res.json();
+        console.log('Job boards fetched:', data);
+        setJobBoards(Array.isArray(data.job_boards) ? data.job_boards : []);
+      } catch (err) {
+        console.error('Failed to fetch job boards:', err);
+        setJobBoards([]);
+      }
+    };
+
+    fetchJobBoards();
   }, [token]);
 
-  // Fetch companies
+  // ---------------- Fetch companies ----------------
   useEffect(() => {
     if (!token) return;
-    fetch('/companies', { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.json())
-      .then(data => {
-        if (data.companies && Array.isArray(data.companies)) setCompanies(data.companies);
-        else setCompanies([]);
-      })
-      .catch(err => console.error('Failed to fetch companies:', err));
+
+    const fetchCompanies = async () => {
+      try {
+        const res = await fetch('/companies', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`GET /companies failed: ${res.status}`);
+        const data = await res.json();
+        console.log('Companies fetched:', data.companies);
+        setCompanies(Array.isArray(data.companies) ? data.companies : []);
+      } catch (err) {
+        console.error('Failed to fetch companies:', err);
+        setCompanies([]);
+      }
+    };
+
+    fetchCompanies();
   }, [token]);
 
+  // ---------------- Handle form submit ----------------
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 
     // Determine company info based on mode
     const companyName = companyMode === 'manual' ? manualCompanyName.trim() : undefined;
-    const companyId = companyMode === 'select' && selectedCompanyId ? selectedCompanyId : undefined;
+    const companyId =
+      companyMode === 'select' && selectedCompanyId ? String(selectedCompanyId) : undefined;
 
+    console.log({ companyMode, companyName, companyId, jobTitle, jobBoardId, status });
+
+    // Validate all fields
     if (
       (companyMode === 'manual' && !companyName) ||
-      (companyMode === 'select' && !companyId) ||
+      (companyMode === 'select' && (!companyId || companyId.trim() === '')) ||
       !jobTitle.trim() ||
       !status ||
       !jobBoardId
@@ -92,6 +122,7 @@ const EnterApplication: React.FC = () => {
         navigate('/');
       } else {
         const data = await res.json().catch(() => ({}));
+        console.error('Application submission failed:', data);
         setError(data.error || 'Failed to submit application.');
       }
     } catch (err) {
@@ -141,7 +172,7 @@ const EnterApplication: React.FC = () => {
           <SelectBox
             label="Company"
             value={selectedCompanyId}
-            onChange={val => setSelectedCompanyId(val)} // ensure val is a string
+            onChange={val => setSelectedCompanyId(String(val))}
             options={companies.map(c => ({ value: c.id, label: c.name }))}
             required
           />

@@ -56,38 +56,39 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Respo
     return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
   }
 
-  const { companyName, jobTitle, jobBoardId, status } = req.body;
+  const { companyName, companyId, jobTitle, jobBoardId, status } = req.body;
 
-  if (!companyName || !jobTitle || !jobBoardId || !status) {
+  // Validate required fields
+  if ((!companyName && !companyId) || !jobTitle || !jobBoardId || !status) {
     return res.status(400).json({ error: 'All fields are required.' });
   }
 
   try {
-    // Ensure the company exists
-    let companyResult = await pool.query(
-      'SELECT id FROM companies WHERE name = $1',
-      [companyName]
-    );
+    let finalCompanyId = companyId;
 
-    let companyId: string;
-
-    // If the company does not exist already, add it to the DB.
-    if (companyResult.rows.length === 0) {
-      // Insert new company
-      const insertCompany = await pool.query(
-        'INSERT INTO companies (name) VALUES ($1) RETURNING id',
+    // If user entered company manually, insert it if it doesn't exist
+    if (!companyId && companyName) {
+      const companyResult = await pool.query(
+        'SELECT id FROM companies WHERE name = $1',
         [companyName]
       );
-      companyId = insertCompany.rows[0].id;
-    } else {
-      companyId = companyResult.rows[0].id;
+
+      if (companyResult.rows.length === 0) {
+        const insertCompany = await pool.query(
+          'INSERT INTO companies (name) VALUES ($1) RETURNING id',
+          [companyName]
+        );
+        finalCompanyId = insertCompany.rows[0].id;
+      } else {
+        finalCompanyId = companyResult.rows[0].id;
+      }
     }
 
     // Insert the application
     await pool.query(
       `INSERT INTO applications (user_id, company_id, job_board_id, job_title, status)
        VALUES ($1, $2, $3, $4, $5)`,
-      [req.userId, companyId, jobBoardId, jobTitle, status]
+      [req.userId, finalCompanyId, jobBoardId, jobTitle, status]
     );
 
     res.json({ message: 'Application submitted successfully' });
@@ -96,6 +97,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Respo
     res.status(500).json({ error: 'Server error while submitting application' });
   }
 });
+
 
 /* =============================
    Application status update endpoint.
