@@ -4,20 +4,20 @@ This schema reflects the current tables created in `server/db/init.ts`.
 
 ---
 
-## 1. Tables (Column → Type → Constraints)
+## 1. Tables (Columns, Types, Constraints)
 
 ### 1.1 `users`
 
 **Purpose:** Core user accounts for the system.
 
-**Columns**
-
-- `id` (UUID, PRIMARY KEY, DEFAULT gen_random_uuid())
-- `username` (TEXT, UNIQUE, NOT NULL)
-- `firstname` (TEXT, NOT NULL)
-- `lastname` (TEXT, NOT NULL)
-- `email` (TEXT, NULLABLE)
-- `password` (TEXT, NOT NULL) — hashed password
+| Column    | Type  | Constraints                               | Description                 |
+|----------|-------|--------------------------------------------|-----------------------------|
+| id       | UUID  | PRIMARY KEY, DEFAULT `gen_random_uuid()`   | Surrogate key               |
+| username | TEXT  | UNIQUE, NOT NULL                           | Login handle                |
+| firstname| TEXT  | NOT NULL                                   | User’s first name           |
+| lastname | TEXT  | NOT NULL                                   | User’s last name            |
+| email    | TEXT  | NULLABLE                                   | Contact email               |
+| password | TEXT  | NOT NULL                                   | Hashed password             |
 
 ---
 
@@ -25,15 +25,14 @@ This schema reflects the current tables created in `server/db/init.ts`.
 
 **Purpose:** Companies that users apply to.
 
-**Columns**
-
-- `id` (UUID, PRIMARY KEY, DEFAULT gen_random_uuid())
-- `user_id` (UUID, NULLABLE, FOREIGN KEY → `users.id`, ON DELETE SET NULL)  
-  → which user “owns”/created this company record
-- `name` (TEXT, UNIQUE, NOT NULL)
-- `website` (TEXT, NULLABLE)
-- `location` (TEXT, NULLABLE)
-- `created_at` (TIMESTAMPTZ, DEFAULT now())
+| Column     | Type       | Constraints                                                   | Description                              |
+|-----------|------------|---------------------------------------------------------------|------------------------------------------|
+| id        | UUID       | PRIMARY KEY, DEFAULT `gen_random_uuid()`                      | Company identifier                       |
+| user_id   | UUID       | FOREIGN KEY → `users.id`, NULLABLE, `ON DELETE SET NULL`      | Which user created/owns this company     |
+| name      | TEXT       | UNIQUE, NOT NULL                                              | Company name                             |
+| website   | TEXT       | NULLABLE                                                      | Website URL                              |
+| location  | TEXT       | NULLABLE                                                      | City/region/etc.                         |
+| created_at| TIMESTAMPTZ| DEFAULT `now()`                                               | When this record was created             |
 
 ---
 
@@ -41,13 +40,12 @@ This schema reflects the current tables created in `server/db/init.ts`.
 
 **Purpose:** Job platforms where postings come from.
 
-**Columns**
-
-- `id` (UUID, PRIMARY KEY, DEFAULT gen_random_uuid())
-- `user_id` (UUID, NULLABLE, FOREIGN KEY → `users.id`, ON DELETE SET NULL)  
-  → optional owner/creator of this job board entry
-- `name` (TEXT, UNIQUE, NOT NULL) — e.g. “LinkedIn”, “Indeed”
-- `url` (TEXT, NULLABLE)
+| Column   | Type       | Constraints                                                   | Description                         |
+|---------|------------|---------------------------------------------------------------|-------------------------------------|
+| id      | UUID       | PRIMARY KEY, DEFAULT `gen_random_uuid()`                      | Job board identifier                |
+| user_id | UUID       | FOREIGN KEY → `users.id`, NULLABLE, `ON DELETE SET NULL`      | Optional owner/creator user         |
+| name    | TEXT       | UNIQUE, NOT NULL                                              | Platform name (LinkedIn, Indeed…)   |
+| url     | TEXT       | NULLABLE                                                      | Base URL                            |
 
 ---
 
@@ -55,19 +53,16 @@ This schema reflects the current tables created in `server/db/init.ts`.
 
 **Purpose:** Individual job applications submitted by users.
 
-**Columns**
-
-- `id` (UUID, PRIMARY KEY, DEFAULT gen_random_uuid())
-- `user_id` (UUID, NOT NULL, FOREIGN KEY → `users.id`, ON DELETE CASCADE)  
-  → who submitted this application
-- `company_id` (UUID, NULLABLE, FOREIGN KEY → `companies.id`, ON DELETE SET NULL)  
-  → which company this application is for
-- `job_board_id` (UUID, NULLABLE, FOREIGN KEY → `job_boards.id`, ON DELETE SET NULL)  
-  → which job board the posting came from
-- `job_title` (TEXT, NOT NULL)
-- `status` (TEXT, CHECK IN `('applied','offer','rejected','withdrawn')`)
-- `applied_at` (TIMESTAMPTZ, DEFAULT now())
-- `last_updated` (TIMESTAMPTZ, DEFAULT now())
+| Column        | Type       | Constraints                                                                    | Description                                |
+|--------------|------------|--------------------------------------------------------------------------------|--------------------------------------------|
+| id           | UUID       | PRIMARY KEY, DEFAULT `gen_random_uuid()`                                       | Application identifier                     |
+| user_id      | UUID       | FOREIGN KEY → `users.id`, NOT NULL, `ON DELETE CASCADE`                        | Who submitted this application             |
+| company_id   | UUID       | FOREIGN KEY → `companies.id`, NULLABLE, `ON DELETE SET NULL`                   | Target company                             |
+| job_board_id | UUID       | FOREIGN KEY → `job_boards.id`, NULLABLE, `ON DELETE SET NULL`                  | Source job board                           |
+| job_title    | TEXT       | NOT NULL                                                                       | Title of the position                      |
+| status       | TEXT       | CHECK IN `('applied','offer','rejected','withdrawn')`                          | Current state of the application           |
+| applied_at   | TIMESTAMPTZ| DEFAULT `now()`                                                                | When the application was created           |
+| last_updated | TIMESTAMPTZ| DEFAULT `now()`                                                                | Last time status/details were updated      |
 
 ---
 
@@ -75,16 +70,16 @@ This schema reflects the current tables created in `server/db/init.ts`.
 
 **Purpose:** Flexible key–value tags per user (links, bios, etc.).
 
-**Columns**
-
-- `id` (UUID, PRIMARY KEY, DEFAULT gen_random_uuid())
-- `user_id` (UUID, NOT NULL, FOREIGN KEY → `users.id`, ON DELETE CASCADE)
-- `tag` (TEXT, NOT NULL) — e.g. “LinkedIn URL”, “Portfolio”, “Bio”
-- `value` (TEXT, NOT NULL)
-- `type` (TEXT, NOT NULL, CHECK IN `('link','text')`)
-- `created_at` (TIMESTAMPTZ, DEFAULT now())
-- `updated_at` (TIMESTAMPTZ, DEFAULT now())
-- **UNIQUE (`user_id`, `tag`)** — a given user cannot have the same tag name twice
+| Column     | Type       | Constraints                                                   | Description                                      |
+|-----------|------------|---------------------------------------------------------------|--------------------------------------------------|
+| id        | UUID       | PRIMARY KEY, DEFAULT `gen_random_uuid()`                      | Tag row identifier                               |
+| user_id   | UUID       | FOREIGN KEY → `users.id`, NOT NULL, `ON DELETE CASCADE`       | Owner user                                       |
+| tag       | TEXT       | NOT NULL                                                      | Tag name (e.g. “LinkedIn URL”, “Portfolio”)      |
+| value     | TEXT       | NOT NULL                                                      | Tag value (URL or text)                          |
+| type      | TEXT       | NOT NULL, CHECK IN `('link','text')`                          | Distinguishes links vs free text                 |
+| created_at| TIMESTAMPTZ| DEFAULT `now()`                                               | Creation timestamp                               |
+| updated_at| TIMESTAMPTZ| DEFAULT `now()`                                               | Last modification timestamp                      |
+| (user_id, tag) |        | UNIQUE                                                        | One row per (user, tag) combination              |
 
 ---
 
@@ -92,32 +87,32 @@ This schema reflects the current tables created in `server/db/init.ts`.
 
 ### 2.1 One-to-Many Relationships
 
-All relationships below are **one user/company/board → many dependent records**.
-
 - **users (1) → (N) companies**  
   - via `companies.user_id` (nullable, `ON DELETE SET NULL`)
+
 - **users (1) → (N) job_boards**  
   - via `job_boards.user_id` (nullable, `ON DELETE SET NULL`)
+
 - **users (1) → (N) applications**  
-  - via `applications.user_id` (`NOT NULL`, `ON DELETE CASCADE`)
+  - via `applications.user_id` (NOT NULL, `ON DELETE CASCADE`)
+
 - **users (1) → (N) tagvalues**  
-  - via `tagvalues.user_id` (`NOT NULL`, `ON DELETE CASCADE`)
+  - via `tagvalues.user_id` (NOT NULL, `ON DELETE CASCADE`)
+
 - **companies (1) → (N) applications**  
   - via `applications.company_id` (nullable, `ON DELETE SET NULL`)
+
 - **job_boards (1) → (N) applications**  
   - via `applications.job_board_id` (nullable, `ON DELETE SET NULL`)
 
 ### 2.2 One-to-One Relationships
 
-- **None explicitly defined**.  
-  All current foreign keys point to “many” side (no unique FK enforcing 1-to-1).
+- None explicitly defined (no unique foreign keys enforcing 1–1).
 
 ### 2.3 Many-to-Many Relationships
 
-- **None implemented yet.**  
-  If we later want “applications ↔ tags” as many-to-many, we would introduce a join table (e.g. `application_tags`) with:
-  - `application_id` FK → applications.id  
-  - `tagvalue_id` FK → tagvalues.id  
+- None implemented yet.  
+  A future many-to-many (e.g. applications ↔ tags) would require a join table.
 
 ---
 
