@@ -9,6 +9,9 @@ import CreateUser from './pages/CreateUser';
 import ChangePassword from './pages/ChangePassword';
 import EnterApplication from './pages/EnterApplication';
 import { PrivateRoute, PublicRoute } from './routehandling/RouteHandling';
+import CoverLetters from './pages/CoverLetters';
+import QuickDraw from './pages/QuickDraw'
+import ConfigureJobBoards from './pages/ConfigureJobBoards'
 
 function App() {
   const { loading } = useAuth();
@@ -20,6 +23,9 @@ function App() {
     { name: 'Create User', path: '/createuser', element: <CreateUser />, type: 'public', restricted: true },
     { name: 'Change Password', path: '/changepassword', element: <ChangePassword />, type: 'private' },
     { name: 'Enter Application', path: '/enterapplication', element: <EnterApplication />, type: 'private' },
+    { name: 'Quick Draw', path: '/quickdraw', element: <QuickDraw />, type: 'private' },
+    { name: 'Cover Letters', path: '/coverletters', element: <CoverLetters/>, type: 'private' },
+    { name: 'Configure Job Boards', path: '/configurejobboards', element: <ConfigureJobBoards/>, type: 'private' },
   ];
 
   if (loading) return <p>Loading...</p>;
