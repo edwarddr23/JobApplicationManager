@@ -1,36 +1,26 @@
-# JobApplicationManager — ERD (Entity Relationship Diagram)
-
-This ERD reflects the current schema in `server/db/init.ts`.  
-
----
-
-## 1. Mermaid ER Diagram
-
 ```mermaid
+---
+title: JobApplicationManager ERD
+---
 erDiagram
     USERS {
         UUID id PK
         TEXT username UK
-        TEXT firstname
-        TEXT lastname
         TEXT email
         TEXT password
     }
 
     COMPANIES {
         UUID id PK
-        UUID user_id FK
         TEXT name UK
-        TEXT website
+        UUID user_id FK
         TEXT location
-        TIMESTAMPTZ created_at
     }
 
     JOB_BOARDS {
         UUID id PK
-        UUID user_id FK
         TEXT name UK
-        TEXT url
+        UUID user_id FK
     }
 
     APPLICATIONS {
@@ -40,25 +30,20 @@ erDiagram
         UUID job_board_id FK
         TEXT job_title
         TEXT status
-        TIMESTAMPTZ applied_at
-        TIMESTAMPTZ last_updated
     }
 
     TAGVALUES {
         UUID id PK
         UUID user_id FK
         TEXT tag
-        TEXT value
         TEXT type
-        TIMESTAMPTZ created_at
-        TIMESTAMPTZ updated_at
     }
 
-    %% Relationships (cardinality)
-    USERS ||--o{ COMPANIES    : owns
-    USERS ||--o{ JOB_BOARDS   : uses
-    USERS ||--o{ APPLICATIONS : submits
-    USERS ||--o{ TAGVALUES    : has
+    %% Relationships with cardinalities
+    USERS      ||--o{ COMPANIES    : creates
+    USERS      ||--o{ JOB_BOARDS   : defines
+    USERS      ||--o{ APPLICATIONS : submits
+    USERS      ||--o{ TAGVALUES    : has
 
-    COMPANIES ||--o{ APPLICATIONS   : receives
-    JOB_BOARDS ||--o{ APPLICATIONS  : source_of
+    COMPANIES  ||--o{ APPLICATIONS : receives
+    JOB_BOARDS ||--o{ APPLICATIONS : source_off
