@@ -12,6 +12,7 @@ import { PrivateRoute, PublicRoute } from './routehandling/RouteHandling';
 import CoverLetters from './pages/CoverLetters';
 import QuickDraw from './pages/QuickDraw'
 import ConfigureJobBoards from './pages/ConfigureJobBoards'
+import ConfigureCompanies from './pages/ConfigureCompanies'
 
 function App() {
   const { loading } = useAuth();
@@ -26,6 +27,7 @@ function App() {
     { name: 'Quick Draw', path: '/quickdraw', element: <QuickDraw />, type: 'private' },
     { name: 'Cover Letters', path: '/coverletters', element: <CoverLetters/>, type: 'private' },
     { name: 'Configure Job Boards', path: '/configurejobboards', element: <ConfigureJobBoards/>, type: 'private' },
+    { name: 'Configure Companies', path: '/configurecompanies', element: <ConfigureCompanies/>, type: 'private' },
   ];
 
   if (loading) return <p>Loading...</p>;
