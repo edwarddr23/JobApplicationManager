@@ -192,7 +192,7 @@ const ConfigureCompanies: React.FC = () => {
   // ---------------- UI ----------------
   return (
     <div style={{ padding: 16 }}>
-      <h2>Configure → Companies</h2>
+      <h2>Configure Companies</h2>
       {error && <p style={{ color: 'crimson' }}>{error}</p>}
 
       {/* Add company inputs */}

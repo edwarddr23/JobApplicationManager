@@ -48,37 +48,63 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
    Submit (post) application endpoint.
 ============================= */
 router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
-  const { companyId, companyName, jobTitle, jobBoardId, status } = req.body;
+  const { companyId, companyName, jobTitle, jobBoardId, jobBoardName, status } = req.body;
 
-  // Validate required fields
-  if (!jobTitle || !jobBoardId || !status) {
+  if (!jobTitle || !status) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
 
-  // Either a company must be selected or a custom name provided
   if (!companyId && (!companyName || companyName.trim() === '')) {
     return res.status(400).json({ error: 'You must provide a company.' });
   }
 
+  if (!jobBoardId && (!jobBoardName || jobBoardName.trim() === '')) {
+    return res.status(400).json({ error: 'You must provide a job board.' });
+  }
+
   try {
-    const result = await pool.query(
-      `
-      INSERT INTO applications 
-      (user_id, company_id, custom_company_name, job_title, job_board_id, status)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING id;
-      `,
+    // ---------------- Handle manual company ----------------
+    let finalCompanyId = companyId || null;
+
+    if (!finalCompanyId && companyName) {
+      const result = await pool.query(
+        `INSERT INTO companies (user_id, name) VALUES ($1, $2)
+         ON CONFLICT (user_id, name) DO UPDATE SET name = EXCLUDED.name
+         RETURNING id`,
+        [req.userId, companyName.trim()]
+      );
+      finalCompanyId = result.rows[0].id;
+    }
+
+    // ---------------- Handle manual job board ----------------
+    let finalJobBoardId = jobBoardId || null;
+
+    if (!finalJobBoardId && jobBoardName) {
+      const result = await pool.query(
+        `INSERT INTO job_boards (user_id, name) VALUES ($1, $2)
+         ON CONFLICT (user_id, name) DO UPDATE SET name = EXCLUDED.name
+         RETURNING id`,
+        [req.userId, jobBoardName.trim()]
+      );
+      finalJobBoardId = result.rows[0].id;
+    }
+
+    // ---------------- Insert application ----------------
+    const insertApp = await pool.query(
+      `INSERT INTO applications (user_id, company_id, custom_company_name, job_title, job_board_id, status)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id`,
       [
-        req.userId,                     // authenticated user
-        companyId || null,              // selected company (nullable)
-        companyName?.trim() || null,    // manual company name (nullable)
+        req.userId,
+        finalCompanyId,
+        companyId ? null : companyName.trim(),
         jobTitle.trim(),
-        jobBoardId,
+        finalJobBoardId,
         status,
       ]
     );
 
-    return res.json({ application_id: result.rows[0].id });
+    res.json({ application_id: insertApp.rows[0].id });
   } catch (err) {
     console.error('Insert failed:', err);
     return res.status(500).json({ error: 'Server error.' });

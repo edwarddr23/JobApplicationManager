@@ -7,7 +7,7 @@ interface JobBoard {
   id: string;
   name: string;
   url: string | null;
-  userAdded: boolean;
+  isUserAdded: boolean;
 }
 
 interface Company {
@@ -76,11 +76,11 @@ const EnterApplication: React.FC = () => {
         const data = await res.json();
         setJobBoards(
           Array.isArray(data.job_boards)
-            ? data.job_boards.map((jb: JobBoard) => ({
+            ? data.job_boards.map((jb: any) => ({
                 id: jb.id,
                 name: jb.name,
                 url: jb.url,
-                userAdded: jb.userAdded,
+                isUserAdded: jb.isUserAdded, // correct name
               }))
             : []
         );
@@ -127,13 +127,14 @@ const EnterApplication: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          companyName,
-          companyId,
+          companyId: companyMode === 'select' ? selectedCompanyId : null,
+          companyName: companyMode === 'manual' ? manualCompanyName.trim() : null,
           jobTitle: jobTitle.trim(),
-          jobBoardName,
-          jobBoardId,
+          jobBoardId: jobBoardMode === 'select' ? selectedJobBoardId : null,
+          jobBoardName: jobBoardMode === 'manual' ? manualJobBoardName.trim() : null,
           status,
-        }),
+        })
+,
       });
 
       if (res.ok) {
@@ -157,16 +158,6 @@ const EnterApplication: React.FC = () => {
 
         {/* Company selection */}
         <div style={{ marginBottom: 12 }}>
-          <label>
-            <input
-              type="radio"
-              name="companyMode"
-              value="manual"
-              checked={companyMode === 'manual'}
-              onChange={() => setCompanyMode('manual')}
-            />
-            Enter company manually
-          </label>
           <label style={{ marginLeft: 16 }}>
             <input
               type="radio"
@@ -176,6 +167,16 @@ const EnterApplication: React.FC = () => {
               onChange={() => setCompanyMode('select')}
             />
             Select from existing companies
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="companyMode"
+              value="manual"
+              checked={companyMode === 'manual'}
+              onChange={() => setCompanyMode('manual')}
+            />
+            Enter company manually
           </label>
         </div>
 

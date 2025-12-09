@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { TextInputBox, SelectBox } from '../components/UIComponents';
+import { FaCopy } from "react-icons/fa";
 
 interface TagValue {
   id: string;
@@ -19,11 +20,13 @@ const QuickDraw: React.FC = () => {
   const [value, setValue] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTag, setEditTag] = useState('');
   const [editType, setEditType] = useState<'text' | 'link'>('text');
   const [editValue, setEditValue] = useState('');
+  const [clickedId, setClickedId] = useState<string | null>(null);
 
   // -------- Load (initial only) --------
   const load = useCallback(async () => {
@@ -203,6 +206,7 @@ const QuickDraw: React.FC = () => {
               <th style={{ borderBottom: '1px solid #ccc', padding: 8 }}>Tag</th>
               <th style={{ borderBottom: '1px solid #ccc', padding: 8 }}>Type</th>
               <th style={{ borderBottom: '1px solid #ccc', padding: 8 }}>Value</th>
+              <th style={{ borderBottom: '1px solid #ccc', padding: 8 }}>Copy</th>
               <th style={{ borderBottom: '1px solid #ccc', padding: 8 }}>Actions</th>
             </tr>
           </thead>
@@ -245,6 +249,32 @@ const QuickDraw: React.FC = () => {
                     )}
                   </td>
                   <td style={{ padding: 8 }}>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(r.value);
+                        setClickedId(r.id); // invert animation
+                        setToastMessage("Saved to clipboard!"); // show toast
+                        setTimeout(() => setClickedId(null), 300); // revert button color
+                        setTimeout(() => setToastMessage(null), 2000); // hide toast after 2s
+                      }}
+                      title="Copy value"
+                      style={{
+                        background: clickedId === r.id ? 'black' : 'white',
+                        color: clickedId === r.id ? 'white' : 'black',
+                        border: '1px solid black',
+                        cursor: 'pointer',
+                        padding: '4px 8px',
+                        transition: 'all 0.3s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {FaCopy({})}
+                    </button>
+
+                  </td>
+                  <td style={{ padding: 8 }}>
                     {isEditing ? (
                       <>
                         <button onClick={() => saveEdit(r.id)} disabled={loading}>
@@ -270,6 +300,27 @@ const QuickDraw: React.FC = () => {
             })}
           </tbody>
         </table>
+      )}
+      {toastMessage && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 20,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'black',
+            color: 'white',
+            padding: '10px 20px',
+            borderRadius: 8,
+            boxShadow: '0px 2px 10px rgba(0,0,0,0.3)',
+            opacity: 0.9,
+            pointerEvents: 'none',
+            zIndex: 1000,
+            transition: 'all 0.3s ease',
+          }}
+        >
+          {toastMessage}
+        </div>
       )}
     </div>
   );

@@ -37,8 +37,10 @@ export async function createJobBoardsTable() {
     CREATE TABLE IF NOT EXISTS job_boards (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-        name TEXT UNIQUE NOT NULL,
-        url TEXT
+        name TEXT NOT NULL,
+        url TEXT,
+        created_at TIMESTAMPTZ DEFAULT now(),
+        UNIQUE(user_id, name)
     );
   `;
   await pool.query(query);
