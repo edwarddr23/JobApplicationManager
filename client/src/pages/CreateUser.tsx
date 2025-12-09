@@ -12,7 +12,7 @@ const CreateUser: React.FC = () => {
   const [confirmpassword, setConfirmpassword] = useState<string>("");
   const [error, setError] = useState<string>("");
 
-  const { setUser } = useAuth();
+  const { login } = useAuth(); // <-- use login instead of setUser
   const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -36,9 +36,11 @@ const CreateUser: React.FC = () => {
 
       if (res.ok) {
         const data: { user: User } = await res.json();
-        setUser(data.user);
+        // Use login() to update context
+        login(data.user); // only pass the user
         navigate("/");
-      } else if (res.status === 409) {
+      }
+       else if (res.status === 409) {
         setError("Username already exists.");
       } else {
         setError("Something went wrong. Please try again.");
@@ -53,7 +55,7 @@ const CreateUser: React.FC = () => {
     <div>
       <h1>Create User</h1>
       <form onSubmit={handleSubmit}>
-        {error && <p>{error}</p>}
+        {error && <p style={{ color: "red" }}>{error}</p>}
 
         <TextInputBox
           label="Email"
