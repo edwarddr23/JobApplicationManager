@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface CoverLetter {
@@ -17,22 +17,18 @@ const CoverLetters: React.FC = () => {
   const { user } = useAuth();
   const token = user?.token;
 
-  const load = async () => {
+  // -------- Load (initial only) --------
+  const load = useCallback(async () => {
     if (!token) return;
     setError('');
 
     try {
       setLoading(true);
-
       const res = await fetch('/cover-letters', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) {
-        throw new Error('Failed to load cover letters');
-      }
+      if (!res.ok) throw new Error('Failed to load cover letters');
 
       const data = await res.json();
       setRows(Array.isArray(data) ? data : []);
@@ -42,18 +38,18 @@ const CoverLetters: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     load();
-  }, [token]);
+  }, [load]);
 
+  // -------- Upload --------
   const handleUpload = async () => {
     if (!label.trim() || !file) {
       setError('Label and PDF file are required.');
       return;
     }
-
     if (file.type !== 'application/pdf') {
       setError('Only PDF files are allowed.');
       return;
@@ -62,16 +58,13 @@ const CoverLetters: React.FC = () => {
     setError('');
     try {
       setLoading(true);
-
       const fd = new FormData();
       fd.append('label', label.trim());
       fd.append('file', file);
 
       const res = await fetch('/cover-letters', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: fd,
       });
 
@@ -91,17 +84,15 @@ const CoverLetters: React.FC = () => {
     }
   };
 
+  // -------- Delete --------
   const handleDelete = async (id: string) => {
     setError('');
 
     try {
       setLoading(true);
-
       const res = await fetch(`/cover-letters/${id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) {
@@ -118,8 +109,9 @@ const CoverLetters: React.FC = () => {
     }
   };
 
+  // -------- UI --------
   return (
-    <div>
+    <div style={{ padding: 16 }}>
       <h1>Cover Letters</h1>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -151,7 +143,9 @@ const CoverLetters: React.FC = () => {
           {rows.map(r => (
             <li key={r.id} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <strong>{r.label}</strong> — {r.filename}
-              <button onClick={() => handleDelete(r.id)}>Delete</button>
+              <button onClick={() => handleDelete(r.id)} disabled={loading}>
+                Delete
+              </button>
             </li>
           ))}
         </ul>

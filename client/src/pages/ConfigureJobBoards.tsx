@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface JobBoard {
@@ -22,8 +22,8 @@ const ConfigureJobBoards: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editUrl, setEditUrl] = useState('');
 
-  // Load job boards
-  const load = async () => {
+  // ---------------- Load job boards ----------------
+  const load = useCallback(async () => {
     if (!token) return;
     setError(null);
     setLoading(true);
@@ -42,63 +42,59 @@ const ConfigureJobBoards: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     load();
-  }, [token]);
+  }, [load]);
 
-  // Add new board
+  // ---------------- Add new board ----------------
   const addBoard = async () => {
-  if (!newName.trim()) {
-    setError('Job board name cannot be empty');
-    return;
-  }
+    if (!newName.trim()) {
+      setError('Job board name cannot be empty');
+      return;
+    }
 
-  setError(null);
-  setLoading(true);
+    setError(null);
+    setLoading(true);
 
     try {
-        const res = await fetch('/job-boards', {
+      const res = await fetch('/job-boards', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ name: newName.trim() }),
-        });
+      });
 
-        if (!res.ok) {
+      if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        if (res.status === 409) {
-            throw new Error(data.message || 'Job board already exists');
-        }
+        if (res.status === 409) throw new Error(data.message || 'Job board already exists');
         throw new Error(data.error || 'Failed to add job board');
-        }
+      }
 
-        const created = await res.json();
-
-        // Add the new board locally without reloading
-        setBoards(prev => [
+      const created = await res.json();
+      setBoards(prev => [
         ...prev,
         {
-            id: created.jobBoardId,
-            name: newName.trim(),
-            isUserAdded: true,
-            url: created.url || null,
+          id: created.jobBoardId,
+          name: newName.trim(),
+          isUserAdded: true,
+          url: created.url || null,
         },
-        ]);
+      ]);
 
-            // Reset input field
-            setNewName('');
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+      setNewName('');
+      setNewUrl('');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Delete board
+  // ---------------- Delete board ----------------
   const delBoard = async (id: string) => {
     setError(null);
     setLoading(true);
@@ -122,7 +118,7 @@ const ConfigureJobBoards: React.FC = () => {
     }
   };
 
-  // Edit board
+  // ---------------- Edit board ----------------
   const startEdit = (board: JobBoard) => {
     setEditingId(board.id);
     setEditName(board.name);
@@ -156,8 +152,6 @@ const ConfigureJobBoards: React.FC = () => {
         throw new Error(data.error || 'Failed to update job board');
       }
 
-      const updated = await res.json();
-
       setBoards(prev =>
         prev.map(b =>
           b.id === id ? { ...b, name: editName.trim(), url: editUrl.trim() || null } : b
@@ -172,11 +166,9 @@ const ConfigureJobBoards: React.FC = () => {
     }
   };
 
-  const cancelEdit = () => {
-    setEditingId(null);
-  };
+  const cancelEdit = () => setEditingId(null);
 
-  // UI
+  // ---------------- UI ----------------
   return (
     <div style={{ padding: 16 }}>
       <h2>Configure → Job Boards</h2>
@@ -217,7 +209,6 @@ const ConfigureJobBoards: React.FC = () => {
           <tbody>
             {boards.map(b => {
               const isEditing = editingId === b.id;
-
               return (
                 <tr key={b.id}>
                   <td style={{ padding: 8 }}>
@@ -264,14 +255,14 @@ const ConfigureJobBoards: React.FC = () => {
                     ) : (
                       <>
                         {b.isUserAdded && (
-                          <button onClick={() => startEdit(b)} disabled={loading}>
-                            Edit
-                          </button>
-                        )}
-                        {b.isUserAdded && (
-                          <button onClick={() => delBoard(b.id)} disabled={loading}>
-                            Delete
-                          </button>
+                          <>
+                            <button onClick={() => startEdit(b)} disabled={loading}>
+                              Edit
+                            </button>
+                            <button onClick={() => delBoard(b.id)} disabled={loading}>
+                              Delete
+                            </button>
+                          </>
                         )}
                       </>
                     )}

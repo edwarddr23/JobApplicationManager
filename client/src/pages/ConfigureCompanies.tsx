@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Company {
@@ -26,7 +26,7 @@ const ConfigureCompanies: React.FC = () => {
   const [editLocation, setEditLocation] = useState('');
 
   // ---------------- Load companies ----------------
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!token) return;
     setError(null);
     setLoading(true);
@@ -42,11 +42,11 @@ const ConfigureCompanies: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     load();
-  }, [token]);
+  }, [load]);
 
   // ---------------- Add company ----------------
   const addCompany = async () => {
@@ -167,9 +167,9 @@ const ConfigureCompanies: React.FC = () => {
           c.id === id
             ? {
                 ...c,
-                name: editName.trim(),
-                website: editWebsite.trim() || null,
-                location: editLocation.trim() || null,
+                name: updated.company.name,
+                website: updated.company.website,
+                location: updated.company.location,
               }
             : c
         )
@@ -286,20 +286,16 @@ const ConfigureCompanies: React.FC = () => {
                           Cancel
                         </button>
                       </>
-                    ) : (
+                    ) : c.userAdded ? (
                       <>
-                        {c.userAdded && (
-                          <>
-                            <button onClick={() => startEdit(c)} disabled={loading}>
-                              Edit
-                            </button>
-                            <button onClick={() => delCompany(c.id)} disabled={loading}>
-                              Delete
-                            </button>
-                          </>
-                        )}
+                        <button onClick={() => startEdit(c)} disabled={loading}>
+                          Edit
+                        </button>
+                        <button onClick={() => delCompany(c.id)} disabled={loading}>
+                          Delete
+                        </button>
                       </>
-                    )}
+                    ) : null}
                   </td>
                 </tr>
               );

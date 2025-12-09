@@ -21,10 +21,11 @@ export async function createCompaniesTable() {
     CREATE TABLE IF NOT EXISTS companies (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-        name TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
         website TEXT,
         location TEXT,
-        created_at TIMESTAMPTZ DEFAULT now()
+        created_at TIMESTAMPTZ DEFAULT now(),
+        UNIQUE (user_id, name)
     );
   `;
   await pool.query(query);
@@ -130,13 +131,13 @@ export async function seedCompanies() {
     await pool.query(
       `INSERT INTO companies (name, website, location, user_id)
        VALUES ($1, $2, $3, $4)
-       ON CONFLICT (name) DO NOTHING`,
+       ON CONFLICT (user_id, name) DO NOTHING`,
       [c.name, c.website, c.location, c.user_id]
     );
   }
+
   console.log('Companies seeded.');
 }
-
 
 export async function seedUsers() {
   const users = [

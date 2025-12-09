@@ -53,16 +53,21 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Respo
   if (!name) return res.status(400).json({ error: 'Company name is required.' });
 
   try {
-    const companyResult = await pool.query('SELECT id FROM companies WHERE name = $1', [name]);
+    // Check if the company already exists for this user
+    const companyResult = await pool.query(
+      'SELECT id, user_id FROM companies WHERE name = $1 AND user_id = $2',
+      [name, req.userId]
+    );
 
     if (companyResult.rows.length > 0) {
       return res.status(409).json({
-        message: 'Company already exists',
+        message: 'You have already added this company.',
         companyId: companyResult.rows[0].id,
-        isUserAdded: false
+        isUserAdded: true
       });
     }
 
+    // Insert the new company
     const insertResult = await pool.query(
       `INSERT INTO companies (name, website, location, user_id)
        VALUES ($1, $2, $3, $4)
@@ -75,6 +80,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Respo
       companyId: insertResult.rows[0].id,
       isUserAdded: true
     });
+
   } catch (err) {
     console.error('Error adding company:', err);
     res.status(500).json({ error: 'Server error while adding company' });
@@ -122,8 +128,8 @@ router.put('/:companyId', authenticateToken, async (req: AuthenticatedRequest, r
 
   try {
     const companyResult = await pool.query(
-      'SELECT * FROM companies WHERE id = $1 AND user_id = $2',
-      [companyId, req.userId]
+      'SELECT id FROM companies WHERE name = $1 AND (user_id IS NULL OR user_id = $2)',
+      [name, req.userId]
     );
 
     if (companyResult.rowCount === 0) return res.status(404).json({ error: 'Company not found or not owned by user' });
