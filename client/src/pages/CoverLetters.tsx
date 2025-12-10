@@ -8,30 +8,45 @@ interface CoverLetter {
 }
 
 const CoverLetters: React.FC = () => {
+  const { user } = useAuth();
+  const token = user?.token;
+
   const [rows, setRows] = useState<CoverLetter[]>([]);
   const [label, setLabel] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { user } = useAuth();
-  const token = user?.token;
-
-  // -------- Load (initial only) --------
+  // --------------------------
+  // Load cover letters
+  // --------------------------
   const load = useCallback(async () => {
     if (!token) return;
+
     setError('');
+    setLoading(true);
 
     try {
-      setLoading(true);
       const res = await fetch('/cover-letters', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error('Failed to load cover letters');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to load cover letters');
+      }
 
-      const data = await res.json();
-      setRows(Array.isArray(data) ? data : []);
+      const data: { cover_letters?: any[] } = await res.json();
+
+      const coverLetters = Array.isArray(data.cover_letters) ? data.cover_letters : [];
+
+      const mapped: CoverLetter[] = coverLetters.map(cl => ({
+        id: cl.id,
+        label: cl.name ?? 'Unnamed Cover Letter',
+        filename: cl.file_path ? cl.file_path.split('/').pop() ?? '' : '',
+      }));
+
+      setRows(mapped);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Failed to load cover letters.');
@@ -44,7 +59,9 @@ const CoverLetters: React.FC = () => {
     load();
   }, [load]);
 
-  // -------- Upload --------
+  // --------------------------
+  // Upload a cover letter
+  // --------------------------
   const handleUpload = async () => {
     if (!label.trim() || !file) {
       setError('Label and PDF file are required.');
@@ -56,10 +73,11 @@ const CoverLetters: React.FC = () => {
     }
 
     setError('');
+    setLoading(true);
+
     try {
-      setLoading(true);
       const fd = new FormData();
-      fd.append('label', label.trim());
+      fd.append('name', label.trim());
       fd.append('file', file);
 
       const res = await fetch('/cover-letters', {
@@ -75,7 +93,7 @@ const CoverLetters: React.FC = () => {
 
       setLabel('');
       setFile(null);
-      load();
+      await load();
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Upload failed.');
@@ -84,12 +102,14 @@ const CoverLetters: React.FC = () => {
     }
   };
 
-  // -------- Delete --------
+  // --------------------------
+  // Delete a cover letter
+  // --------------------------
   const handleDelete = async (id: string) => {
     setError('');
+    setLoading(true);
 
     try {
-      setLoading(true);
       const res = await fetch(`/cover-letters/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
@@ -100,7 +120,7 @@ const CoverLetters: React.FC = () => {
         throw new Error(data.error || 'Failed to delete cover letter');
       }
 
-      load();
+      await load();
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Delete failed.');
@@ -109,14 +129,16 @@ const CoverLetters: React.FC = () => {
     }
   };
 
-  // -------- UI --------
+  // --------------------------
+  // Render
+  // --------------------------
   return (
-    <div style={{ padding: 16 }}>
+    <div style={{ padding: 20 }}>
       <h1>Cover Letters</h1>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 10 }}>
         <input
           type="text"
           placeholder="Label"
@@ -138,11 +160,14 @@ const CoverLetters: React.FC = () => {
 
       {loading ? (
         <p>Loading…</p>
+      ) : rows.length === 0 ? (
+        <p>No cover letters uploaded yet.</p>
       ) : (
-        <ul>
+        <ul style={{ paddingLeft: 20 }}>
           {rows.map(r => (
-            <li key={r.id} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <strong>{r.label}</strong> — {r.filename}
+            <li key={r.id} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <strong>{r.label}</strong>
+              <span style={{ opacity: 0.7 }}>({r.filename})</span>
               <button onClick={() => handleDelete(r.id)} disabled={loading}>
                 Delete
               </button>

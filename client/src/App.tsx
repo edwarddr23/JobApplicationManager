@@ -25,7 +25,7 @@ function App() {
     { name: 'Change Password', path: '/changepassword', element: <ChangePassword />, type: 'private' },
     { name: 'Enter Application', path: '/enterapplication', element: <EnterApplication />, type: 'private' },
     { name: 'Quick Draw', path: '/quickdraw', element: <QuickDraw />, type: 'private' },
-    // { name: 'Cover Letters', path: '/coverletters', element: <CoverLetters/>, type: 'private' },
+    { name: 'Cover Letters', path: '/coverletters', element: <CoverLetters/>, type: 'private' },
     { name: 'Configure Job Boards', path: '/configurejobboards', element: <ConfigureJobBoards/>, type: 'private' },
     { name: 'Configure Companies', path: '/configurecompanies', element: <ConfigureCompanies/>, type: 'private' },
   ];
