@@ -129,6 +129,36 @@ const CoverLetters: React.FC = () => {
     }
   };
 
+  const handleDownload = async (id: string, filename: string) => {
+    try {
+      const res = await fetch(`/cover-letters/${id}/download`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to download file");
+      }
+
+      // Convert response to blob
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      // Create a temporary link
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename || "cover_letter.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Download failed.");
+    }
+  };
+
   // --------------------------
   // Render
   // --------------------------
@@ -168,6 +198,11 @@ const CoverLetters: React.FC = () => {
             <li key={r.id} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <strong>{r.label}</strong>
               <span style={{ opacity: 0.7 }}>({r.filename})</span>
+
+              <button onClick={() => handleDownload(r.id, r.filename)} disabled={loading}>
+                Download
+              </button>
+
               <button onClick={() => handleDelete(r.id)} disabled={loading}>
                 Delete
               </button>

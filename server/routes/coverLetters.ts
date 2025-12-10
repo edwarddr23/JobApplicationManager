@@ -133,4 +133,55 @@ router.delete("/:id", authenticateToken, async (req: AuthenticatedRequest, res: 
   }
 });
 
+/* ============================================
+   📥 Download a cover letter
+=============================================== */
+router.get("/:id/download", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.userId) return res.status(401).json({ error: "Unauthorized" });
+
+  const { id } = req.params;
+
+  try {
+    // 1. Lookup the row and ensure it belongs to this user
+    const result = await pool.query(
+      `SELECT name, file_path 
+       FROM cover_letters 
+       WHERE id = $1 AND user_id = $2`,
+      [id, req.userId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Cover letter not found" });
+    }
+
+    const { name, file_path } = result.rows[0];
+
+    if (!file_path) {
+      return res.status(400).json({ error: "File path is missing for this cover letter" });
+    }
+
+    // 2. Convert relative path → absolute
+    const absolutePath = path.resolve(file_path);
+
+    if (!fs.existsSync(absolutePath)) {
+      return res.status(404).json({ error: "File not found on server" });
+    }
+
+    // 3. Send file with a clean download filename
+    const downloadName = `${name}.pdf`;
+
+    res.download(absolutePath, downloadName, (err) => {
+      if (err) {
+        console.error("Download error:", err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: "Failed to download file" });
+        }
+      }
+    });
+  } catch (err) {
+    console.error("Error downloading cover letter:", err);
+    res.status(500).json({ error: "Server error while downloading cover letter" });
+  }
+});
+
 export default router;
