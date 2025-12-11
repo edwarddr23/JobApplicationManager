@@ -39,7 +39,7 @@ function Navbar({ links }: NavbarProps) {
         ))}
       </ul>
 
-      <div style={{ float: "right" }}>
+      {/* <div style={{ float: "right" }}>
         {user ? (
           <div>
             <Link to="/myprofile">{user.username}</Link>
@@ -48,7 +48,7 @@ function Navbar({ links }: NavbarProps) {
         ) : (
           showLoginLink && <Link to="/login">Login</Link>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }
