@@ -38,17 +38,6 @@ function Navbar({ links }: NavbarProps) {
           </li>
         ))}
       </ul>
-
-      {/* <div style={{ float: "right" }}>
-        {user ? (
-          <div>
-            <Link to="/myprofile">{user.username}</Link>
-            <button onClick={handleLogout}>Logout</button>
-          </div>
-        ) : (
-          showLoginLink && <Link to="/login">Login</Link>
-        )}
-      </div> */}
     </div>
   );
 }
