@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>JobApplicationManager — Final Product Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      margin: 0;
+      padding: 2rem 1.5rem 4rem;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    h1, h2, h3 {
+      color: #f0f6fc;
+    }
+    h1 {
+      font-size: 2.1rem;
+      margin-bottom: 0.25rem;
+    }
+    h2 {
+      font-size: 1.45rem;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 0.25rem;
+      margin-top: 2rem;
+    }
+    h3 {
+      font-size: 1.1rem;
+      margin-top: 1.4rem;
+    }
+    p {
+      margin: 0.4rem 0 0.7rem;
+    }
+    ul {
+      padding-left: 1.4rem;
+      margin: 0.2rem 0 0.7rem;
+    }
+    code {
+      background: #161b22;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.95em;
+    }
+    pre {
+      background: #161b22;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 0.9rem;
+      margin: 0.4rem 0 0.9rem;
+    }
+    a {
+      color: #58a6ff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .subtitle {
+      color: #8b949e;
+      margin-bottom: 1.5rem;
+    }
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.5rem 0 1rem;
+      padding: 0;
+      list-style: none;
+    }
+    .pill {
+      font-size: 0.85rem;
+      border-radius: 999px;
+      border: 1px solid #30363d;
+      padding: 0.15rem 0.7rem;
+      background: #161b22;
+      color: #c9d1d9;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>JobApplicationManager — Final Product Page</h1>
+      <p class="subtitle">
+        A full-stack job application manager with a PostgreSQL backend and a React/TypeScript frontend.
+      </p>
+    </header>
+
+    <!-- 1. Product Overview -->
+    <section id="overview">
+      <h2>1. Product Overview</h2>
+      <p>
+        JobApplicationManager is a web application that gives users a structured way to manage their job search.
+        Instead of juggling spreadsheets, notes, and browser tabs, everything lives in one consistent system backed
+        by a relational database.
+      </p>
+      <p><strong>In the UI, a user can:</strong></p>
+      <ul>
+        <li>Create an account and log in</li>
+        <li>Maintain a personal list of companies</li>
+        <li>Maintain a personal list of job boards</li>
+        <li>Enter job applications and track their status over time</li>
+        <li>Store profile metadata such as LinkedIn URL, portfolio, or bio</li>
+        <li>Quickly review applications through a “Quick Draw” view</li>
+        <li>Manage cover-letter-related information</li>
+        <li>Configure companies and job boards through dedicated screens</li>
+      </ul>
+      <p>
+        Every action in the UI is backed by a relational PostgreSQL database and exposed through an Express API.
+      </p>
+    </section>
+
+    <!-- 2. Value Proposition -->
+    <section id="value-proposition">
+      <h2>2. Value Proposition</h2>
+
+      <h3>2.1 Problem</h3>
+      <p>
+        Most job searches are tracked informally: ad-hoc spreadsheets, email search, messages to self.
+        That makes it hard to answer basic questions like:
+      </p>
+      <ul>
+        <li>Where did I apply last week?</li>
+        <li>Which companies have already rejected me?</li>
+        <li>Which roles are still pending?</li>
+        <li>Which version of my profile or links did I send to which employer?</li>
+      </ul>
+
+      <h3>2.2 Our Approach</h3>
+      <p>
+        JobApplicationManager provides a <strong>single, coherent system</strong> for the job search:
+      </p>
+      <ul>
+        <li>
+          Every user, company, job board, application, and profile tag is stored as a properly related row
+          in the database.
+        </li>
+        <li>
+          The UI is organized around clear pages:
+          <ul>
+            <li><strong>Home</strong></li>
+            <li><strong>Login</strong></li>
+            <li><strong>My Profile</strong></li>
+            <li><strong>Create User</strong></li>
+            <li><strong>Change Password</strong></li>
+            <li><strong>Enter Application</strong></li>
+            <li><strong>Quick Draw</strong></li>
+            <li><strong>Cover Letters</strong></li>
+            <li><strong>Configure Job Boards</strong></li>
+            <li><strong>Configure Companies</strong></li>
+          </ul>
+        </li>
+        <li>
+          The backend enforces relationships, uniqueness, and referential integrity so data
+          stays consistent as the job search scales.
+        </li>
+      </ul>
+      <p>
+        The result is a controlled, auditable workflow instead of scattered information.
+      </p>
+    </section>
+
+    <!-- 3. Differentiation -->
+    <section id="differentiation">
+      <h2>3. What Differentiates Our Product</h2>
+
+      <h3>3.1 Focused, normalized schema</h3>
+      <p>
+        Our database schema is intentionally <strong>focused and normalized</strong> around the true entities of the problem:
+      </p>
+      <ul>
+        <li><code>users</code></li>
+        <li><code>companies</code></li>
+        <li><code>job_boards</code></li>
+        <li><code>applications</code></li>
+        <li><code>tagvalues</code></li>
+      </ul>
+      <p>
+        The UI has more screens, but those screens are <strong>different operations on this same schema</strong>:
+      </p>
+      <ul>
+        <li><strong>Quick Draw</strong> runs targeted queries against <code>applications</code>.</li>
+        <li><strong>My Profile</strong> reads from <code>users</code> plus <code>tagvalues</code>.</li>
+        <li>
+          <strong>Configure Companies</strong> / <strong>Configure Job Boards</strong> are CRUD views
+          on <code>companies</code> and <code>job_boards</code>.
+        </li>
+        <li>
+          <strong>Cover Letters</strong> are stored as tag values or profile metadata without needing extra tables.
+        </li>
+      </ul>
+      <p>
+        We only introduce tables when there is a real new data entity. That keeps the backend consistent and ready for
+        extensions such as notes, interviews, or analytics.
+      </p>
+
+      <h3>3.2 Clear mapping between UI and database</h3>
+      <p>
+        Every page in the UI maps directly to database work:
+      </p>
+      <ul>
+        <li><strong>Login / Create User / Change Password</strong> → operations on <code>users</code></li>
+        <li><strong>My Profile</strong> → <code>users</code> + <code>tagvalues</code></li>
+        <li><strong>Configure Companies</strong> → CRUD on <code>companies</code></li>
+        <li><strong>Configure Job Boards</strong> → CRUD on <code>job_boards</code></li>
+        <li><strong>Enter Application</strong> → inserts and updates in <code>applications</code></li>
+        <li><strong>Quick Draw</strong> → filtered queries on <code>applications</code></li>
+        <li><strong>Cover Letters</strong> → metadata in <code>tagvalues</code> (e.g., stored templates or links)</li>
+      </ul>
+      <p>
+        This makes the system easier to reason about and easier to demonstrate:
+        UI interactions correspond one-to-one with relational updates.
+      </p>
+
+      <h3>3.3 Flexible profile system using TagValues</h3>
+      <p>
+        Instead of adding a new column every time we need more profile information, we use the
+        <code>tagvalues</code> table:
+      </p>
+      <ul>
+        <li>Each row is <code>(id, user_id, tag, value, type, created_at, updated_at)</code>.</li>
+        <li><code>(user_id, tag)</code> is unique, so a user cannot have two “LinkedIn URL” entries.</li>
+        <li><code>type</code> distinguishes links from plain text.</li>
+      </ul>
+      <p>
+        This supports evolving needs like LinkedIn URL, GitHub / portfolio links, resume URL, short bio,
+        and custom fields without schema changes.
+      </p>
+    </section>
+
+    <!-- 4. Technical Design -->
+    <section id="technical-design">
+      <h2>4. Technical Design</h2>
+
+      <h3>4.1 Stack Overview</h3>
+      <ul class="pill-list">
+        <li class="pill">React + TypeScript (Vite)</li>
+        <li class="pill">Node.js + Express</li>
+        <li class="pill">PostgreSQL</li>
+        <li class="pill">Session / token-based auth</li>
+        <li class="pill">Docker + docker-compose</li>
+      </ul>
+
+      <h3>4.2 Database Schema (Logical Design)</h3>
+      <p>
+        We use five tables, all defined in <code>server/db/init.ts</code> and documented in
+        <code>docs/schema.md</code>:
+      </p>
+      <ul>
+        <li><strong>users</strong> — core user accounts and login credentials</li>
+        <li><strong>companies</strong> — companies users apply to</li>
+        <li><strong>job_boards</strong> — platforms like LinkedIn, Indeed, or custom sources</li>
+        <li><strong>applications</strong> — each job application a user submits</li>
+        <li><strong>tagvalues</strong> — flexible key–value metadata per user</li>
+      </ul>
+      <p><strong>Key constraints:</strong></p>
+      <ul>
+        <li>All primary keys are UUIDs.</li>
+        <li><code>users.username</code>, <code>companies.name</code>, and <code>job_boards.name</code> are unique.</li>
+        <li>
+          Foreign keys:
+          <ul>
+            <li><code>companies.user_id</code> → <code>users.id</code></li>
+            <li><code>job_boards.user_id</code> → <code>users.id</code></li>
+            <li><code>applications.user_id</code> → <code>users.id</code></li>
+            <li><code>applications.company_id</code> → <code>companies.id</code></li>
+            <li><code>applications.job_board_id</code> → <code>job_boards.id</code></li>
+            <li><code>tagvalues.user_id</code> → <code>users.id</code></li>
+          </ul>
+        </li>
+        <li><code>(user_id, tag)</code> is unique in <code>tagvalues</code>.</li>
+      </ul>
+      <p>
+        For detailed column-by-column documentation, see
+        <code>docs/schema.md</code>.
+      </p>
+
+      <h3>4.3 ERD (Entity Relationship Diagram)</h3>
+      <p>
+        The ERD (in <code>docs/erd.md</code>) visualizes the relationships:
+      </p>
+      <ul>
+        <li>One <strong>user</strong> → many <strong>companies</strong></li>
+        <li>One <strong>user</strong> → many <strong>job_boards</strong></li>
+        <li>One <strong>user</strong> → many <strong>applications</strong></li>
+        <li>One <strong>user</strong> → many <strong>tagvalues</strong></li>
+        <li>One <strong>company</strong> → many <strong>applications</strong></li>
+        <li>One <strong>job_board</strong> → many <strong>applications</strong></li>
+      </ul>
+      <p>
+        <code>applications</code> sits at the center, connecting users, companies, and job boards.
+      </p>
+    </section>
+
+    <!-- 5. Codebase -->
+    <section id="codebase">
+      <h2>5. Link to Codebase</h2>
+      <p>
+        GitHub repository:
+        <a href="https://github.com/edwarddr23/JobApplicationManager" target="_blank" rel="noreferrer">
+          https://github.com/edwarddr23/JobApplicationManager
+        </a>
+      </p>
+      <p><strong>Key directories:</strong></p>
+      <ul>
+        <li><code>client/</code> — React + TypeScript frontend</li>
+        <li><code>server/</code> — Node/Express backend (routes, auth, database access)</li>
+        <li><code>docs/</code> — schema, ERD, devlog, and final documentation</li>
+      </ul>
+    </section>
+
+    <!-- 6. User Guide -->
+    <section id="user-guide">
+      <h2>6. User Guide</h2>
+
+      <h3>6.1 Prerequisites</h3>
+      <ul>
+        <li>Node.js (LTS)</li>
+        <li>npm or yarn</li>
+        <li>Docker + <code>docker-compose</code> (if using the Docker setup)</li>
+      </ul>
+
+      <h3>6.2 Local Setup (without Docker)</h3>
+      <pre><code>git clone git@github.com:edwarddr23/JobApplicationManager.git
+cd JobApplicationManager</code></pre>
+
+      <p><strong>Backend</strong></p>
+      <pre><code>cd server
+npm install
+npm run dev</code></pre>
+
+      <p><strong>Frontend</strong></p>
+      <pre><code>cd ../client
+npm install
+npm run dev</code></pre>
+
+      <p>
+        The frontend typically runs on <code>http://localhost:5000</code> and the backend on
+        <code>http://localhost:3001</code> (or configured ports).
+      </p>
+
+      <h3>6.3 Running with Docker</h3>
+      <pre><code>docker compose down -v
+docker compose up --build</code></pre>
+    </section>
+
+    <!-- 7. UI → Data Model -->
+    <section id="ui-mapping">
+      <h2>7. Mapping the UI to the Data Model</h2>
+      <ul>
+        <li><strong>Home</strong> — entry point / navigation</li>
+        <li><strong>Login / Create User / Change Password</strong> — authentication flows on <code>users</code></li>
+        <li><strong>My Profile</strong> — combines <code>users</code> and <code>tagvalues</code> for profile display</li>
+        <li><strong>Configure Companies</strong> — CRUD interface over <code>companies</code></li>
+        <li><strong>Configure Job Boards</strong> — CRUD interface over <code>job_boards</code></li>
+        <li><strong>Enter Application</strong> — inserts and updates rows in <code>applications</code></li>
+        <li><strong>Quick Draw</strong> — quick filtering/preview of <code>applications</code></li>
+        <li><strong>Cover Letters</strong> — driven by <code>tagvalues</code> (e.g., saved links or text)</li>
+      </ul>
+      <p>
+        This direct mapping between pages and tables is what makes the system consistent and explainable.
+      </p>
+    </section>
+
+    <!-- 8. Future Extensions -->
+    <section id="future">
+      <h2>8. Future Extensions</h2>
+      <p>
+        Because the schema is normalized and relationships are explicit, the project can grow in several directions:
+      </p>
+      <ul>
+        <li>Application stages (phone screen, onsite, offer, etc.)</li>
+        <li>Notes per application</li>
+        <li>Interview scheduling</li>
+        <li>Analytics dashboards (conversion rates per company or job board)</li>
+        <li>Many-to-many tagging for applications</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
