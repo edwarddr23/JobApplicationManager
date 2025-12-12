@@ -50,7 +50,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Respo
   if (!name) return res.status(400).json({ error: 'Job board name is required.' });
 
   try {
-    const existing = await pool.query('SELECT id FROM job_boards WHERE name = $1', [name]);
+    const existing = await pool.query('SELECT id FROM job_boards WHERE name = $1 AND user_id = $2', [name, req.userId]);
 
     if (existing.rows.length > 0) {
       return res.status(409).json({

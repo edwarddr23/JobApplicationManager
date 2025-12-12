@@ -9,6 +9,7 @@ import companyRoutes from './routes/companies';
 import applicationRoutes from './routes/applications';
 import jobBoardRoutes from './routes/jobBoards';
 import tagvaluesRoutes from './routes/tagValues';
+import coverLetterRoutes from './routes/coverLetters';
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ app.use('/companies', companyRoutes);
 app.use('/applications', applicationRoutes);
 app.use('/job-boards', jobBoardRoutes);
 app.use('/tagvalues', tagvaluesRoutes);
+app.use('/cover-letters', coverLetterRoutes);
 
 // Start server
 app.listen(SERVER_PORT, '0.0.0.0', () => {

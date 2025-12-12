@@ -151,36 +151,51 @@ const EnterApplication: React.FC = () => {
 
   // ---------------- UI ----------------
   return (
-    <div>
-      <h1>Enter New Application</h1>
-      <form onSubmit={handleSubmit}>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+  <div style={{ maxWidth: 650, margin: "0 auto", padding: 20 }}>
+    <h1 style={{ marginBottom: 24 }}>Enter New Application</h1>
 
-        {/* Company selection */}
+    {error && <p style={{ color: "red" }}>{error}</p>}
+
+    <form onSubmit={handleSubmit}>
+
+      {/* -------------------------------------------------- */}
+      {/* Company Section */}
+      {/* -------------------------------------------------- */}
+      <div
+        style={{
+          border: "1px solid #ccc",
+          borderRadius: 8,
+          padding: 20,
+          marginBottom: 24,
+        }}
+      >
+        <h2 style={{ marginTop: 0 }}>Company</h2>
+
         <div style={{ marginBottom: 12 }}>
-          <label style={{ marginLeft: 16 }}>
+          <label style={{ marginRight: 16 }}>
             <input
               type="radio"
               name="companyMode"
               value="select"
-              checked={companyMode === 'select'}
-              onChange={() => setCompanyMode('select')}
+              checked={companyMode === "select"}
+              onChange={() => setCompanyMode("select")}
             />
-            Select from existing companies
+            <span style={{ marginLeft: 6 }}>Choose Existing</span>
           </label>
+
           <label>
             <input
               type="radio"
               name="companyMode"
               value="manual"
-              checked={companyMode === 'manual'}
-              onChange={() => setCompanyMode('manual')}
+              checked={companyMode === "manual"}
+              onChange={() => setCompanyMode("manual")}
             />
-            Enter company manually
+            <span style={{ marginLeft: 6 }}>Enter Manually</span>
           </label>
         </div>
 
-        {companyMode === 'manual' ? (
+        {companyMode === "manual" ? (
           <TextInputBox
             label="Company Name"
             type="text"
@@ -190,39 +205,53 @@ const EnterApplication: React.FC = () => {
           />
         ) : (
           <SelectBox
-            label="Company"
+            label="Select Company"
             value={selectedCompanyId}
-            onChange={val => setSelectedCompanyId(String(val))}
-            options={companies.map(c => ({ value: c.id, label: c.name }))}
+            onChange={(val) => setSelectedCompanyId(String(val))}
+            options={companies.map((c) => ({ value: c.id, label: c.name }))}
             required
           />
         )}
+      </div>
 
-        {/* Job board selection */}
+      {/* -------------------------------------------------- */}
+      {/* Job Board Section */}
+      {/* -------------------------------------------------- */}
+      <div
+        style={{
+          border: "1px solid #ccc",
+          borderRadius: 8,
+          padding: 20,
+          marginBottom: 24,
+        }}
+      >
+        <h2 style={{ marginTop: 0 }}>Job Board</h2>
+
         <div style={{ marginBottom: 12 }}>
-          <label>
+          <label style={{ marginRight: 16 }}>
             <input
               type="radio"
               name="jobBoardMode"
               value="select"
-              checked={jobBoardMode === 'select'}
-              onChange={() => setJobBoardMode('select')}
+              checked={jobBoardMode === "select"}
+              onChange={() => setJobBoardMode("select")}
             />
-            Select Job Board
+            <span style={{ marginLeft: 6 }}>Choose Existing</span>
           </label>
-          <label style={{ marginLeft: 16 }}>
+
+          <label>
             <input
               type="radio"
               name="jobBoardMode"
               value="manual"
-              checked={jobBoardMode === 'manual'}
-              onChange={() => setJobBoardMode('manual')}
+              checked={jobBoardMode === "manual"}
+              onChange={() => setJobBoardMode("manual")}
             />
-            Enter Job Board Manually
+            <span style={{ marginLeft: 6 }}>Enter Manually</span>
           </label>
         </div>
 
-        {jobBoardMode === 'manual' ? (
+        {jobBoardMode === "manual" ? (
           <TextInputBox
             label="Job Board Name"
             type="text"
@@ -232,15 +261,28 @@ const EnterApplication: React.FC = () => {
           />
         ) : (
           <SelectBox
-            label="Job Board"
+            label="Select Job Board"
             value={selectedJobBoardId}
-            onChange={val => setSelectedJobBoardId(String(val))}
-            options={jobBoards.map(jb => ({ value: jb.id, label: jb.name }))}
+            onChange={(val) => setSelectedJobBoardId(String(val))}
+            options={jobBoards.map((jb) => ({ value: jb.id, label: jb.name }))}
             required
           />
         )}
+      </div>
 
-        {/* Job title */}
+      {/* -------------------------------------------------- */}
+      {/* Job Information Section */}
+      {/* -------------------------------------------------- */}
+      <div
+        style={{
+          border: "1px solid #ccc",
+          borderRadius: 8,
+          padding: 20,
+          marginBottom: 24,
+        }}
+      >
+        <h2 style={{ marginTop: 0 }}>Job Information</h2>
+
         <TextInputBox
           label="Job Title"
           type="text"
@@ -249,24 +291,27 @@ const EnterApplication: React.FC = () => {
           required
         />
 
-        {/* Status */}
         <SelectBox
-          label="Status"
+          label="Application Status"
           value={status}
           onChange={setStatus}
           options={[
-            { value: 'applied', label: 'Applied' },
-            { value: 'offer', label: 'Offer' },
-            { value: 'rejected', label: 'Rejected' },
-            { value: 'withdrawn', label: 'Withdrawn' },
+            { value: "applied", label: "Applied" },
+            { value: "offer", label: "Offer" },
+            { value: "rejected", label: "Rejected" },
+            { value: "withdrawn", label: "Withdrawn" },
           ]}
           required
         />
+      </div>
 
-        <button type="submit">Submit Application</button>
-      </form>
-    </div>
-  );
+      {/* Submit */}
+      <button type="submit" style={{ padding: "8px 16px" }}>
+        Submit Application
+      </button>
+    </form>
+  </div>
+);
 };
 
 export default EnterApplication;
