@@ -1,3 +1,8 @@
+# JobApplicationManager — ERD (Entity Relationship Diagram)
+
+This ERD reflects the current schema in `server/db/init.ts`.
+
+```mermaid
 erDiagram
   USERS {
     UUID id PK
