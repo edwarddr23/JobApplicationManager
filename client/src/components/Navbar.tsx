@@ -1,7 +1,6 @@
 // src/components/Navbar.tsx
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 interface NavLink {
   name: string;
@@ -14,21 +13,6 @@ interface NavbarProps {
 }
 
 function Navbar({ links }: NavbarProps) {
-  const { user, logout } = useAuth(); // <-- use logout from context
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleLogout = async () => {
-    try {
-      await logout(); // context handles clearing user
-      navigate("/");  // redirect to home
-    } catch (err) {
-      console.error("Logout failed", err);
-    }
-  };
-
-  const showLoginLink = !user && location.pathname !== "/login";
-
   return (
     <div>
       <ul>
@@ -38,17 +22,6 @@ function Navbar({ links }: NavbarProps) {
           </li>
         ))}
       </ul>
-
-      <div style={{ float: "right" }}>
-        {user ? (
-          <div>
-            <Link to="/myprofile">{user.username}</Link>
-            <button onClick={handleLogout}>Logout</button>
-          </div>
-        ) : (
-          showLoginLink && <Link to="/login">Login</Link>
-        )}
-      </div>
     </div>
   );
 }

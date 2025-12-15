@@ -12,7 +12,7 @@ const CreateUser: React.FC = () => {
   const [confirmpassword, setConfirmpassword] = useState<string>("");
   const [error, setError] = useState<string>("");
 
-  const { login } = useAuth(); // <-- use login instead of setUser
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {

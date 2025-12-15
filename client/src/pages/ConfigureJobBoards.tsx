@@ -65,7 +65,10 @@ const ConfigureJobBoards: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: newName.trim() }),
+        body: JSON.stringify({ 
+          name: newName.trim(),
+          url: newUrl.trim() || null,
+        }),
       });
 
       if (!res.ok) {
@@ -81,7 +84,7 @@ const ConfigureJobBoards: React.FC = () => {
           id: created.jobBoardId,
           name: newName.trim(),
           isUserAdded: true,
-          url: created.url || null,
+          url: newUrl.trim() || null,
         },
       ]);
 

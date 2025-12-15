@@ -1,5 +1,9 @@
 import bcrypt from 'bcrypt';
 import { pool } from './index';
+import fs from 'fs';
+import path from 'path';
+
+const FILES_DIR = process.env.FILES_DIR || './uploads';
 
 export async function createUsersTable() {
   const query = `
@@ -80,6 +84,20 @@ export async function createTagValuesTable() {
   `;
   await pool.query(query);
   console.log('TagValues table ensured.');
+}
+
+export async function createCoverLettersTable() {
+  const query = `
+    CREATE TABLE cover_letters (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT now()
+  );
+  `;
+  await pool.query(query);
+  console.log('cover_letters table ensured.');
 }
 
 export async function seedJobBoards() {
@@ -258,12 +276,61 @@ export async function seedTagValues() {
   console.log(`TagValues seeded for ${users.length} user(s).`);
 }
 
+export async function seedCoverLetters() {
+  const { rows: users } = await pool.query('SELECT id, username FROM users');
+
+  if (users.length === 0) {
+    console.log('No users found, skipping cover letters seed.');
+    return;
+  }
+
+  // Predefined dummy cover letter names
+  const dummyNames = [
+    'Software Engineer CL',
+    'Frontend Developer CL',
+    'Backend Developer CL',
+    'Data Scientist CL',
+  ];
+
+  for (const user of users) {
+    const userDir = path.join(FILES_DIR, user.id);
+    if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true });
+
+    for (const name of dummyNames) {
+      // Create a safe filename
+      const safeName = name.replace(/[^a-zA-Z0-9_\-]/g, '_');
+      const filename = `${safeName}.pdf`;
+      const filepath = path.join(userDir, filename);
+
+      // Skip if file already exists
+      if (!fs.existsSync(filepath)) {
+        // Create an empty PDF file
+        fs.writeFileSync(filepath, Buffer.from('%PDF-1.4\n%âãÏÓ\n', 'utf-8'));
+      }
+
+      // Save relative path in DB
+      const relativePath = path.relative('.', filepath);
+
+      // Insert into DB (skip duplicates)
+      await pool.query(
+        `INSERT INTO cover_letters (user_id, name, file_path)
+         VALUES ($1, $2, $3)
+         ON CONFLICT DO NOTHING`,
+        [user.id, name, relativePath]
+      );
+    }
+
+    console.log(`Seeded cover letters for user ${user.username}`);
+  }
+}
+
 export async function initializeTables() {
     await createUsersTable();
     await createCompaniesTable();
     await createJobBoardsTable();
     await createApplicationsTable();
     await createTagValuesTable();
+    await createCoverLettersTable();
 
     // ---------------- Check if database is empty ----------------
     const { rows: userRows } = await pool.query('SELECT COUNT(*) FROM users');
@@ -276,6 +343,7 @@ export async function initializeTables() {
       await seedJobBoards();
       await seedApplications();
       await seedTagValues();
+      await seedCoverLetters();
     } else {
       console.log('Database already has data, skipping seeding.');
     }
