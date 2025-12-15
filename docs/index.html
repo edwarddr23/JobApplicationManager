@@ -5,9 +5,7 @@
   <title>JobApplicationManager — Final Product Page</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      color-scheme: dark;
-    }
+    :root { color-scheme: dark; }
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #0d1117;
@@ -16,34 +14,18 @@
       padding: 2rem 1.5rem 4rem;
       line-height: 1.6;
     }
-    main {
-      max-width: 920px;
-      margin: 0 auto;
-    }
-    h1, h2, h3 {
-      color: #f0f6fc;
-    }
-    h1 {
-      font-size: 2.1rem;
-      margin-bottom: 0.25rem;
-    }
+    main { max-width: 920px; margin: 0 auto; }
+    h1, h2, h3 { color: #f0f6fc; }
+    h1 { font-size: 2.1rem; margin-bottom: 0.25rem; }
     h2 {
       font-size: 1.45rem;
       border-bottom: 1px solid #30363d;
       padding-bottom: 0.25rem;
       margin-top: 2rem;
     }
-    h3 {
-      font-size: 1.1rem;
-      margin-top: 1.4rem;
-    }
-    p {
-      margin: 0.4rem 0 0.7rem;
-    }
-    ul {
-      padding-left: 1.4rem;
-      margin: 0.2rem 0 0.7rem;
-    }
+    h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+    p { margin: 0.4rem 0 0.7rem; }
+    ul { padding-left: 1.4rem; margin: 0.2rem 0 0.7rem; }
     code {
       background: #161b22;
       padding: 0.1rem 0.35rem;
@@ -58,17 +40,9 @@
       font-size: 0.9rem;
       margin: 0.4rem 0 0.9rem;
     }
-    a {
-      color: #58a6ff;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    .subtitle {
-      color: #8b949e;
-      margin-bottom: 1.5rem;
-    }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .subtitle { color: #8b949e; margin-bottom: 1.5rem; }
     .pill-list {
       display: flex;
       flex-wrap: wrap;
@@ -83,6 +57,14 @@
       border: 1px solid #30363d;
       padding: 0.15rem 0.7rem;
       background: #161b22;
+      color: #c9d1d9;
+    }
+    .note {
+      border-left: 3px solid #30363d;
+      padding: 0.6rem 0.8rem;
+      background: #0b1320;
+      border-radius: 6px;
+      margin: 0.8rem 0 1rem;
       color: #c9d1d9;
     }
   </style>
@@ -112,7 +94,7 @@
         <li>Enter job applications and track their status over time</li>
         <li>Store profile metadata such as LinkedIn URL, portfolio, or bio</li>
         <li>Quickly review applications through a “Quick Draw” view</li>
-        <li>Manage cover-letter-related information</li>
+        <li>Upload and manage cover letter files</li>
         <li>Configure companies and job boards through dedicated screens</li>
       </ul>
       <p>
@@ -142,7 +124,7 @@
       </p>
       <ul>
         <li>
-          Every user, company, job board, application, and profile tag is stored as a properly related row
+          Every user, company, job board, application, profile tag, and cover letter file is stored as a properly related row
           in the database.
         </li>
         <li>
@@ -176,7 +158,7 @@
 
       <h3>3.1 Focused, normalized schema</h3>
       <p>
-        Our database schema is intentionally <strong>focused and normalized</strong> around the true entities of the problem:
+        Our database schema is intentionally <strong>focused and normalized</strong> around the real entities:
       </p>
       <ul>
         <li><code>users</code></li>
@@ -184,7 +166,9 @@
         <li><code>job_boards</code></li>
         <li><code>applications</code></li>
         <li><code>tagvalues</code></li>
+        <li><code>cover_letters</code></li>
       </ul>
+
       <p>
         The UI has more screens, but those screens are <strong>different operations on this same schema</strong>:
       </p>
@@ -196,45 +180,39 @@
           on <code>companies</code> and <code>job_boards</code>.
         </li>
         <li>
-          <strong>Cover Letters</strong> are stored as tag values or profile metadata without needing extra tables.
+          <strong>Cover Letters</strong> stores uploaded files in <code>cover_letters</code> (path on disk + metadata in DB).
         </li>
       </ul>
-      <p>
-        We only introduce tables when there is a real new data entity. That keeps the backend consistent and ready for
-        extensions such as notes, interviews, or analytics.
-      </p>
+
+      <div class="note">
+        <strong>Important constraint detail:</strong>
+        companies and job boards are unique <em>per user</em>, enforced by <code>UNIQUE (user_id, name)</code>.
+        This allows different users to store the same company or job board name without collisions.
+      </div>
 
       <h3>3.2 Clear mapping between UI and database</h3>
-      <p>
-        Every page in the UI maps directly to database work:
-      </p>
+      <p>Every page maps directly to database work:</p>
       <ul>
         <li><strong>Login / Create User / Change Password</strong> → operations on <code>users</code></li>
         <li><strong>My Profile</strong> → <code>users</code> + <code>tagvalues</code></li>
         <li><strong>Configure Companies</strong> → CRUD on <code>companies</code></li>
         <li><strong>Configure Job Boards</strong> → CRUD on <code>job_boards</code></li>
-        <li><strong>Enter Application</strong> → inserts and updates in <code>applications</code></li>
+        <li><strong>Enter Application</strong> → inserts into <code>applications</code> (optionally using <code>custom_company_name</code>)</li>
         <li><strong>Quick Draw</strong> → filtered queries on <code>applications</code></li>
-        <li><strong>Cover Letters</strong> → metadata in <code>tagvalues</code> (e.g., stored templates or links)</li>
+        <li><strong>Cover Letters</strong> → upload/list/download/delete via <code>cover_letters</code></li>
       </ul>
-      <p>
-        This makes the system easier to reason about and easier to demonstrate:
-        UI interactions correspond one-to-one with relational updates.
-      </p>
 
       <h3>3.3 Flexible profile system using TagValues</h3>
       <p>
-        Instead of adding a new column every time we need more profile information, we use the
-        <code>tagvalues</code> table:
+        Instead of adding a new column every time we need more profile information, we use <code>tagvalues</code>.
       </p>
       <ul>
         <li>Each row is <code>(id, user_id, tag, value, type, created_at, updated_at)</code>.</li>
-        <li><code>(user_id, tag)</code> is unique, so a user cannot have two “LinkedIn URL” entries.</li>
-        <li><code>type</code> distinguishes links from plain text.</li>
+        <li><code>(user_id, tag)</code> is unique, so a user cannot have duplicate tags.</li>
+        <li><code>type</code> distinguishes links vs plain text.</li>
       </ul>
       <p>
-        This supports evolving needs like LinkedIn URL, GitHub / portfolio links, resume URL, short bio,
-        and custom fields without schema changes.
+        This supports evolving profile fields like LinkedIn URL, portfolio link, and bio without changing table structure.
       </p>
     </section>
 
@@ -244,62 +222,61 @@
 
       <h3>4.1 Stack Overview</h3>
       <ul class="pill-list">
-        <li class="pill">React + TypeScript (Vite)</li>
+        <li class="pill">React + TypeScript</li>
         <li class="pill">Node.js + Express</li>
         <li class="pill">PostgreSQL</li>
-        <li class="pill">Session / token-based auth</li>
-        <li class="pill">Docker + docker-compose</li>
+        <li class="pill">JWT / token auth</li>
+        <li class="pill">Docker + docker compose</li>
       </ul>
 
       <h3>4.2 Database Schema (Logical Design)</h3>
       <p>
-        We use five tables, all defined in <code>server/db/init.ts</code> and documented in
-        <code>docs/schema.md</code>:
+        Tables are defined in <code>server/db/init.ts</code> and documented in <code>docs/schema.md</code>:
       </p>
       <ul>
         <li><strong>users</strong> — core user accounts and login credentials</li>
-        <li><strong>companies</strong> — companies users apply to</li>
-        <li><strong>job_boards</strong> — platforms like LinkedIn, Indeed, or custom sources</li>
-        <li><strong>applications</strong> — each job application a user submits</li>
+        <li><strong>companies</strong> — companies a user tracks (unique per user)</li>
+        <li><strong>job_boards</strong> — job boards a user tracks (unique per user)</li>
+        <li><strong>applications</strong> — job applications, linked to user + optional company + optional job board</li>
         <li><strong>tagvalues</strong> — flexible key–value metadata per user</li>
+        <li><strong>cover_letters</strong> — uploaded cover letter files per user</li>
       </ul>
+
       <p><strong>Key constraints:</strong></p>
       <ul>
         <li>All primary keys are UUIDs.</li>
-        <li><code>users.username</code>, <code>companies.name</code>, and <code>job_boards.name</code> are unique.</li>
+        <li><code>users.username</code> is unique.</li>
+        <li><code>companies</code> uses <code>UNIQUE (user_id, name)</code>.</li>
+        <li><code>job_boards</code> uses <code>UNIQUE (user_id, name)</code>.</li>
+        <li><code>tagvalues</code> uses <code>UNIQUE (user_id, tag)</code>.</li>
         <li>
           Foreign keys:
           <ul>
-            <li><code>companies.user_id</code> → <code>users.id</code></li>
-            <li><code>job_boards.user_id</code> → <code>users.id</code></li>
-            <li><code>applications.user_id</code> → <code>users.id</code></li>
-            <li><code>applications.company_id</code> → <code>companies.id</code></li>
-            <li><code>applications.job_board_id</code> → <code>job_boards.id</code></li>
-            <li><code>tagvalues.user_id</code> → <code>users.id</code></li>
+            <li><code>companies.user_id</code> → <code>users.id</code> (<code>ON DELETE SET NULL</code>)</li>
+            <li><code>job_boards.user_id</code> → <code>users.id</code> (<code>ON DELETE SET NULL</code>)</li>
+            <li><code>applications.user_id</code> → <code>users.id</code> (<code>ON DELETE CASCADE</code>)</li>
+            <li><code>applications.company_id</code> → <code>companies.id</code> (<code>ON DELETE SET NULL</code>)</li>
+            <li><code>applications.job_board_id</code> → <code>job_boards.id</code> (<code>ON DELETE SET NULL</code>)</li>
+            <li><code>tagvalues.user_id</code> → <code>users.id</code> (<code>ON DELETE CASCADE</code>)</li>
+            <li><code>cover_letters.user_id</code> → <code>users.id</code> (<code>ON DELETE CASCADE</code>)</li>
           </ul>
         </li>
-        <li><code>(user_id, tag)</code> is unique in <code>tagvalues</code>.</li>
       </ul>
-      <p>
-        For detailed column-by-column documentation, see
-        <code>docs/schema.md</code>.
-      </p>
 
       <h3>4.3 ERD (Entity Relationship Diagram)</h3>
       <p>
-        The ERD (in <code>docs/erd.md</code>) visualizes the relationships:
+        The ERD (in <code>docs/erd.md</code>) visualizes how the tables relate:
       </p>
       <ul>
         <li>One <strong>user</strong> → many <strong>companies</strong></li>
         <li>One <strong>user</strong> → many <strong>job_boards</strong></li>
         <li>One <strong>user</strong> → many <strong>applications</strong></li>
         <li>One <strong>user</strong> → many <strong>tagvalues</strong></li>
-        <li>One <strong>company</strong> → many <strong>applications</strong></li>
-        <li>One <strong>job_board</strong> → many <strong>applications</strong></li>
+        <li>One <strong>user</strong> → many <strong>cover_letters</strong></li>
+        <li>One <strong>company</strong> → many <strong>applications</strong> (optional FK)</li>
+        <li>One <strong>job_board</strong> → many <strong>applications</strong> (optional FK)</li>
       </ul>
-      <p>
-        <code>applications</code> sits at the center, connecting users, companies, and job boards.
-      </p>
+      <p><code>applications</code> sits at the center, linking user/company/job_board, with an optional <code>custom_company_name</code>.</p>
     </section>
 
     <!-- 5. Codebase -->
@@ -323,61 +300,95 @@
     <section id="user-guide">
       <h2>6. User Guide</h2>
 
-      <h3>6.1 Prerequisites</h3>
-      <ul>
-        <li>Node.js (LTS)</li>
-        <li>npm or yarn</li>
-        <li>Docker + <code>docker-compose</code> (if using the Docker setup)</li>
-      </ul>
-
-      <h3>6.2 Local Setup (without Docker)</h3>
-      <pre><code>git clone git@github.com:edwarddr23/JobApplicationManager.git
-cd JobApplicationManager</code></pre>
-
-      <p><strong>Backend</strong></p>
-      <pre><code>cd server
-npm install
-npm run dev</code></pre>
-
-      <p><strong>Frontend</strong></p>
-      <pre><code>cd ../client
-npm install
-npm run dev</code></pre>
-
-      <p>
-        The frontend typically runs on <code>http://localhost:5000</code> and the backend on
-        <code>http://localhost:3001</code> (or configured ports).
-      </p>
-
-      <h3>6.3 Running with Docker</h3>
+      <h3>6.1 Run with Docker (recommended)</h3>
       <pre><code>docker compose down -v
 docker compose up --build</code></pre>
+
+      <div class="note">
+        In our Docker setup, the UI runs on <code>http://localhost:3001</code> and the API runs on <code>http://localhost:5000</code>.
+      </div>
+
+      <h3>6.2 Authentication (Login)</h3>
+      <ol>
+        <li>Open the UI at <code>http://localhost:3001</code>.</li>
+        <li>Click <strong>Login</strong>.</li>
+        <li>Enter a username and password (demo users are seeded on first run).</li>
+        <li>Submit. Expected result: you are redirected to authenticated pages and can load your data.</li>
+      </ol>
+
+      <h3>6.3 Create User</h3>
+      <ol>
+        <li>Click <strong>Create User</strong>.</li>
+        <li>Enter username, first name, last name, email (optional), and password.</li>
+        <li>Submit. Expected result: new row in <code>users</code>.</li>
+        <li>Constraint: username must be unique (<code>users.username</code>).</li>
+      </ol>
+
+      <h3>6.4 Configure Companies</h3>
+      <ol>
+        <li>Click <strong>Configure Companies</strong>.</li>
+        <li>Enter company name, website (optional), location (optional).</li>
+        <li>Click <strong>Add</strong>. Expected result: new row in <code>companies</code>.</li>
+        <li>Uniqueness: <code>UNIQUE (user_id, name)</code> prevents duplicate company names for the same user.</li>
+      </ol>
+
+      <h3>6.5 Configure Job Boards</h3>
+      <ol>
+        <li>Click <strong>Configure Job Boards</strong>.</li>
+        <li>Enter job board name and URL (optional).</li>
+        <li>Click <strong>Add</strong>. Expected result: new row in <code>job_boards</code>.</li>
+        <li>Uniqueness: <code>UNIQUE (user_id, name)</code> prevents duplicates per user.</li>
+      </ol>
+
+      <h3>6.6 Enter Application</h3>
+      <ol>
+        <li>Click <strong>Enter Application</strong>.</li>
+        <li>Choose an existing company or enter a company manually (stored as <code>custom_company_name</code> if not linked).</li>
+        <li>Select an existing job board or enter manually (if supported by UI).</li>
+        <li>Enter job title and status.</li>
+        <li>Submit. Expected result: new row in <code>applications</code> with timestamps set.</li>
+      </ol>
+
+      <h3>6.7 Home / Applications Table (Edit + Delete)</h3>
+      <ol>
+        <li>Go to <strong>Home</strong> to view the applications table.</li>
+        <li>Click <strong>Edit</strong> to change status/job title. Expected result: <code>last_updated</code> changes.</li>
+        <li>Click <strong>Delete</strong> to remove an application. Expected result: row removed (or project-defined delete behavior).</li>
+      </ol>
+
+      <h3>6.8 Quick Draw (TagValues)</h3>
+      <ol>
+        <li>Click <strong>Quick Draw</strong>.</li>
+        <li>Add a tag with type (<code>link</code> or <code>text</code>) and a value.</li>
+        <li>Expected result: new row in <code>tagvalues</code> and it appears in the table.</li>
+        <li>Uniqueness: <code>UNIQUE (user_id, tag)</code> prevents duplicate tags for the same user.</li>
+      </ol>
+
+      <h3>6.9 My Profile</h3>
+      <ol>
+        <li>Click <strong>My Profile</strong>.</li>
+        <li>Expected result: your user info is displayed; profile metadata is driven by <code>tagvalues</code>.</li>
+      </ol>
+
+      <h3>6.10 Cover Letters</h3>
+      <ol>
+        <li>Click <strong>Cover Letters</strong>.</li>
+        <li>Enter a label (name) and choose a PDF file.</li>
+        <li>Click <strong>Upload</strong>. Expected result: file saved on disk and row inserted into <code>cover_letters</code> with <code>file_path</code>.</li>
+        <li>Use <strong>Download</strong> to retrieve the file; use <strong>Delete</strong> to remove it.</li>
+      </ol>
+
+      <h3>6.11 Change Password</h3>
+      <ol>
+        <li>Click <strong>Change Password</strong>.</li>
+        <li>Enter and confirm a new password.</li>
+        <li>Submit. Expected result: password hash updated in <code>users.password</code>.</li>
+      </ol>
     </section>
 
-    <!-- 7. UI → Data Model -->
-    <section id="ui-mapping">
-      <h2>7. Mapping the UI to the Data Model</h2>
-      <ul>
-        <li><strong>Home</strong> — entry point / navigation</li>
-        <li><strong>Login / Create User / Change Password</strong> — authentication flows on <code>users</code></li>
-        <li><strong>My Profile</strong> — combines <code>users</code> and <code>tagvalues</code> for profile display</li>
-        <li><strong>Configure Companies</strong> — CRUD interface over <code>companies</code></li>
-        <li><strong>Configure Job Boards</strong> — CRUD interface over <code>job_boards</code></li>
-        <li><strong>Enter Application</strong> — inserts and updates rows in <code>applications</code></li>
-        <li><strong>Quick Draw</strong> — quick filtering/preview of <code>applications</code></li>
-        <li><strong>Cover Letters</strong> — driven by <code>tagvalues</code> (e.g., saved links or text)</li>
-      </ul>
-      <p>
-        This direct mapping between pages and tables is what makes the system consistent and explainable.
-      </p>
-    </section>
-
-    <!-- 8. Future Extensions -->
+    <!-- 7. Future Extensions -->
     <section id="future">
-      <h2>8. Future Extensions</h2>
-      <p>
-        Because the schema is normalized and relationships are explicit, the project can grow in several directions:
-      </p>
+      <h2>7. Future Extensions</h2>
       <ul>
         <li>Application stages (phone screen, onsite, offer, etc.)</li>
         <li>Notes per application</li>
