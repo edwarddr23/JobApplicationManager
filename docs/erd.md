@@ -68,9 +68,3 @@ erDiagram
 
   COMPANIES ||--o{ APPLICATIONS : receives
   JOB_BOARDS ||--o{ APPLICATIONS : source
-
-## Constraint notes (from `server/db/init.ts`)
-- `companies`: `UNIQUE (user_id, name)` (unique per user)
-- `job_boards`: `UNIQUE (user_id, name)` (unique per user)
-- `tagvalues`: `UNIQUE (user_id, tag)` (one row per tag per user)
-- `applications.status`: CHECK in ('applied','offer','rejected','withdrawn')  
