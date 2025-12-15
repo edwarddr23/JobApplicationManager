@@ -14,12 +14,12 @@ interface AuthenticatedRequest extends Request {
 const FILES_DIR = process.env.FILES_DIR || "./uploads";
 
 /* ============================================
-   🔧 Configure multer (store file in memory first)
+   Configure multer (store file in memory first)
 =============================================== */
 const upload = multer({ storage: multer.memoryStorage() });
 
 /* ============================================
-   📄 GET all cover letters for user
+   GET all cover letters for user
 =============================================== */
 router.get("/", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   if (!req.userId) return res.status(401).json({ error: "Unauthorized" });
@@ -44,7 +44,7 @@ router.get("/", authenticateToken, async (req: AuthenticatedRequest, res: Respon
 });
 
 /* ============================================
-   📤 Upload a new cover letter
+  Upload a new cover letter
 =============================================== */
 router.post(
   "/",
@@ -134,7 +134,7 @@ router.delete("/:id", authenticateToken, async (req: AuthenticatedRequest, res: 
 });
 
 /* ============================================
-   📥 Download a cover letter
+  Download a cover letter
 =============================================== */
 router.get("/:id/download", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   if (!req.userId) return res.status(401).json({ error: "Unauthorized" });

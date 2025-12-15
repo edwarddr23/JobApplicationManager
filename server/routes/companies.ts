@@ -138,7 +138,7 @@ router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Res
       }
     }
 
-    // 2️⃣ Update the company
+    // Update the company
     const result = await pool.query(
       `
       UPDATE companies

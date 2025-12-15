@@ -4,7 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 const JWT_SECRET = process.env.JWT_SECRET || 'defaultsecret';
 
 export interface AuthenticatedRequest extends Request {
-  userId?: string; // changed from number string
+  userId?: string;
 }
 
 export function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
