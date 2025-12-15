@@ -6,17 +6,17 @@ This ERD reflects the current schema in `server/db/init.ts`.
 erDiagram
   USERS {
     UUID id PK
-    TEXT username "UNIQUE, NOT NULL"
-    TEXT firstname "NOT NULL"
-    TEXT lastname "NOT NULL"
+    TEXT username
+    TEXT firstname
+    TEXT lastname
     TEXT email
-    TEXT password "NOT NULL"
+    TEXT password
   }
 
   COMPANIES {
     UUID id PK
     UUID user_id FK
-    TEXT name "NOT NULL"
+    TEXT name
     TEXT website
     TEXT location
     TIMESTAMPTZ created_at
@@ -25,7 +25,7 @@ erDiagram
   JOB_BOARDS {
     UUID id PK
     UUID user_id FK
-    TEXT name "NOT NULL"
+    TEXT name
     TEXT url
     TIMESTAMPTZ created_at
   }
@@ -36,7 +36,7 @@ erDiagram
     UUID company_id FK
     TEXT custom_company_name
     UUID job_board_id FK
-    TEXT job_title "NOT NULL"
+    TEXT job_title
     TEXT status
     TIMESTAMPTZ applied_at
     TIMESTAMPTZ last_updated
@@ -45,9 +45,9 @@ erDiagram
   TAGVALUES {
     UUID id PK
     UUID user_id FK
-    TEXT tag "NOT NULL"
-    TEXT value "NOT NULL"
-    TEXT type "NOT NULL"
+    TEXT tag
+    TEXT value
+    TEXT type
     TIMESTAMPTZ created_at
     TIMESTAMPTZ updated_at
   }
@@ -55,21 +55,21 @@ erDiagram
   COVER_LETTERS {
     UUID id PK
     UUID user_id FK
-    TEXT name "NOT NULL"
-    TEXT file_path "NOT NULL"
+    TEXT name
+    TEXT file_path
     TIMESTAMPTZ created_at
   }
 
-  USERS ||--o{ COMPANIES : "user_id (SET NULL)"
-  USERS ||--o{ JOB_BOARDS : "user_id (SET NULL)"
-  USERS ||--o{ APPLICATIONS : "user_id (CASCADE)"
-  USERS ||--o{ TAGVALUES : "user_id (CASCADE)"
-  USERS ||--o{ COVER_LETTERS : "user_id (CASCADE)"
+  USERS ||--o{ COMPANIES : owns
+  USERS ||--o{ JOB_BOARDS : uses
+  USERS ||--o{ APPLICATIONS : submits
+  USERS ||--o{ TAGVALUES : has
+  USERS ||--o{ COVER_LETTERS : uploads
 
-  COMPANIES ||--o{ APPLICATIONS : "company_id (SET NULL)"
-  JOB_BOARDS ||--o{ APPLICATIONS : "job_board_id (SET NULL)"
+  COMPANIES ||--o{ APPLICATIONS : receives
+  JOB_BOARDS ||--o{ APPLICATIONS : source
 
-**Constraint notes (from `server/db/init.ts`):**
+## Constraint notes (from `server/db/init.ts`)
 - `companies`: `UNIQUE (user_id, name)` (unique per user)
 - `job_boards`: `UNIQUE (user_id, name)` (unique per user)
 - `tagvalues`: `UNIQUE (user_id, tag)` (one row per tag per user)
